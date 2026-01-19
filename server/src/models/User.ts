@@ -65,7 +65,7 @@ const userSchema = new Schema<IUser>(
         year: {
             type: Number,
             min: 1,
-            max: 5,
+            max: 2030,
         },
         walletBalance: {
             type: Number,

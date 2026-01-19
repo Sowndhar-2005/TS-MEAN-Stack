@@ -20,15 +20,21 @@ const detectUserType = (email: string, registrationNumber: string): 'dayscholar'
 
 // Generate JWT token
 const generateToken = (userId: string): string => {
-    return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions);
 };
 
 // Register new user
 export const register = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { name, email, registrationNumber, password, department, year } = req.body;
+        const { name, email, registrationNumber, password, department, year, userType } = req.body;
 
-        // Validate college email
+        // 1. Basic Validation
+        if (!name || !email || !registrationNumber || !password) {
+             res.status(400).json({ error: 'All fields (Name, Email, RegNo, Password) are required' });
+             return;
+        }
+
+        // 2. Validate college email
         if (!email.endsWith(COLLEGE_EMAIL_DOMAIN)) {
             res.status(400).json({
                 error: `Invalid college email. Must end with ${COLLEGE_EMAIL_DOMAIN}`,
@@ -36,9 +42,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        // Check if user already exists
+        // 3. Check if user already exists
         const existingUser = await User.findOne({
-            $or: [{ email }, { registrationNumber }],
+            $or: [{ email: email.toLowerCase() }, { registrationNumber: registrationNumber.toUpperCase() }],
         });
 
         if (existingUser) {
@@ -48,16 +54,19 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        // Detect user type
-        const userType = detectUserType(email, registrationNumber);
+        // Determine user type: preferred from body, fallback to detection
+        let finalUserType = userType;
+        if (!finalUserType || (finalUserType !== 'dayscholar' && finalUserType !== 'hosteller')) {
+             finalUserType = detectUserType(email, registrationNumber);
+        }
 
         // Create new user
         const user = new User({
             name,
-            email,
-            registrationNumber,
+            email: email.toLowerCase(),
+            registrationNumber: registrationNumber.toUpperCase(),
             password,
-            userType,
+            userType: finalUserType,
             department,
             year,
             walletBalance: DEFAULT_WALLET_BALANCE,
@@ -84,7 +93,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         });
     } catch (error: any) {
         console.error('Registration error:', error);
-        res.status(500).json({ error: 'Registration failed' });
+        // RETURN ERROR DETAILS TO FRONTEND FOR DEBUGGING
+        res.status(500).json({ error: 'Registration failed', details: error.message || error });
     }
 };
 
@@ -93,11 +103,19 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = req.body;
 
-        // Find user with password field
-        const user = await User.findOne({ email }).select('+password');
+        if (!email || !password) {
+            res.status(400).json({ error: 'Please provide Email and Password' });
+            return;
+        }
+
+        // Normalize email
+        const normalizedEmail = email.toLowerCase();
+
+        // Find user by email and include password
+        const user = await User.findOne({ email: normalizedEmail }).select('+password');
 
         if (!user) {
-            res.status(401).json({ error: 'Invalid email or password' });
+            res.status(401).json({ error: 'Invalid credentials' });
             return;
         }
 
@@ -105,7 +123,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         const isPasswordValid = await user.comparePassword(password);
 
         if (!isPasswordValid) {
-            res.status(401).json({ error: 'Invalid email or password' });
+            res.status(401).json({ error: 'Invalid credentials' });
             return;
         }
 
