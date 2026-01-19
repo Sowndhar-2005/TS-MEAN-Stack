@@ -1,0 +1,37 @@
+{
+    "name": "campus-canteen-food-hub",
+    "version": "1.0.0",
+    "description": "MEAN Stack Food Ordering Application for Campus Canteen",
+    "private": true,
+    "workspaces": [
+        "client",
+        "server"
+    ],
+    "scripts": {
+        "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+        "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+        "dev:server": "cd server && npm run dev",
+        "dev:client": "cd client && npm start",
+        "build:server": "cd server && npm run build",
+        "build:client": "cd client && npm run build",
+        "build": "npm run build:server && npm run build:client",
+        "start:server": "cd server && npm start",
+        "start:client": "cd client && npm run serve",
+        "test:server": "cd server && npm test",
+        "test:client": "cd client && npm test",
+        "test": "npm run test:server && npm run test:client"
+    },
+    "keywords": [
+        "MEAN",
+        "Angular",
+        "Express",
+        "MongoDB",
+        "Food",
+        "Ordering"
+    ],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}
