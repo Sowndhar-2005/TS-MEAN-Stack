@@ -7,6 +7,7 @@ export interface IUser extends Document {
     registrationNumber: string;
     password: string;
     userType: 'dayscholar' | 'hosteller';
+    isAdmin: boolean;
     department?: string;
     year?: number;
     walletBalance: number;
@@ -58,6 +59,10 @@ const userSchema = new Schema<IUser>(
             enum: ['dayscholar', 'hosteller'],
             required: true,
         },
+        isAdmin: {
+            type: Boolean,
+            default: false,
+        },
         department: {
             type: String,
             trim: true,
@@ -65,7 +70,7 @@ const userSchema = new Schema<IUser>(
         year: {
             type: Number,
             min: 1,
-            max: 2030,
+            max: 5,
         },
         walletBalance: {
             type: Number,

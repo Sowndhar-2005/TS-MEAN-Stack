@@ -5,7 +5,7 @@ export interface IFood extends Document {
     description?: string;
     price: number;
     image?: string;
-    category: 'Breakfast' | 'Lunch' | 'Snacks' | 'Side Dish' | 'Drinks';
+    category: 'Breakfast' | 'Lunch' | 'Snacks' | 'Dinner' | 'Side Dish' | 'Drinks' | 'Ice Cream';
     available: boolean;
     stockQuantity: number;
     rating?: number;
@@ -38,7 +38,7 @@ const foodSchema = new Schema<IFood>(
         category: {
             type: String,
             required: [true, 'Category is required'],
-            enum: ['Breakfast', 'Lunch', 'Snacks', 'Side Dish', 'Drinks'],
+            enum: ['Breakfast', 'Lunch', 'Snacks', 'Dinner', 'Side Dish', 'Drinks', 'Ice Cream'],
         },
         available: {
             type: Boolean,

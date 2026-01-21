@@ -23,6 +23,15 @@ const generateToken = (userId: string): string => {
     return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions);
 };
 
+const ALLOWED_DOMAINS = ['@college.edu', '@gmail.com'];
+
+// Helper to validate email domain
+const isValidEmailDomain = (email: string): boolean => {
+    return ALLOWED_DOMAINS.some(domain => email.endsWith(domain));
+};
+
+// ... (keep detectUserType and generateToken as is)
+
 // Register new user
 export const register = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -30,17 +39,19 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
         // 1. Basic Validation
         if (!name || !email || !registrationNumber || !password) {
-             res.status(400).json({ error: 'All fields (Name, Email, RegNo, Password) are required' });
-             return;
+            res.status(400).json({ error: 'All fields (Name, Email, RegNo, Password) are required' });
+            return;
         }
 
-        // 2. Validate college email
-        if (!email.endsWith(COLLEGE_EMAIL_DOMAIN)) {
+        // 2. Validate email domain (College OR Gmail)
+        if (!isValidEmailDomain(email)) {
             res.status(400).json({
-                error: `Invalid college email. Must end with ${COLLEGE_EMAIL_DOMAIN}`,
+                error: `Invalid email. Allowed domains: ${ALLOWED_DOMAINS.join(', ')}`,
             });
             return;
         }
+
+        // ... (rest of registration logic including lowercase/uppercase normalization)
 
         // 3. Check if user already exists
         const existingUser = await User.findOne({
@@ -57,7 +68,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         // Determine user type: preferred from body, fallback to detection
         let finalUserType = userType;
         if (!finalUserType || (finalUserType !== 'dayscholar' && finalUserType !== 'hosteller')) {
-             finalUserType = detectUserType(email, registrationNumber);
+            finalUserType = detectUserType(email, registrationNumber);
         }
 
         // Create new user
@@ -86,6 +97,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                 email: user.email,
                 registrationNumber: user.registrationNumber,
                 userType: user.userType,
+                isAdmin: user.isAdmin,
                 walletBalance: user.walletBalance,
                 department: user.department,
                 year: user.year,
@@ -93,7 +105,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         });
     } catch (error: any) {
         console.error('Registration error:', error);
-        // RETURN ERROR DETAILS TO FRONTEND FOR DEBUGGING
         res.status(500).json({ error: 'Registration failed', details: error.message || error });
     }
 };
@@ -101,29 +112,51 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 // Login user
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { email, password } = req.body;
+        console.log('Login Request Body:', req.body); // DEBUG
 
-        if (!email || !password) {
-            res.status(400).json({ error: 'Please provide Email and Password' });
+        // Accept identifier (which can be email or regNo) and password
+        const { identifier, password } = req.body;
+
+        if (!identifier && !req.body.email && !req.body.registrationNumber) {
+            res.status(400).json({ error: 'Please provide Email or Registration Number' });
             return;
         }
 
-        // Normalize email
-        const normalizedEmail = email.toLowerCase();
+        if (!password) {
+            res.status(400).json({ error: 'Please provide Password' });
+            return;
+        }
 
-        // Find user by email and include password
-        const user = await User.findOne({ email: normalizedEmail }).select('+password');
+        // Determine effective identifier and type
+        const rawIdentifier = identifier || req.body.email || req.body.registrationNumber;
+        const cleanIdentifier = rawIdentifier.toString().trim();
+        const isEmail = cleanIdentifier.includes('@');
+
+        console.log('Login Attempt:', { cleanIdentifier, isEmail });
+
+        let user;
+
+        if (isEmail) {
+            // Email Login
+            user = await User.findOne({ email: cleanIdentifier.toLowerCase() }).select('+password');
+        } else {
+            // RegNo Login (force uppercase)
+            user = await User.findOne({ registrationNumber: cleanIdentifier.toUpperCase() }).select('+password');
+        }
+
+        console.log('User Found:', user ? 'YES' : 'NO');
 
         if (!user) {
-            res.status(401).json({ error: 'Invalid credentials' });
+            res.status(401).json({ error: 'Invalid credentials (User not found)' });
             return;
         }
 
         // Verify password
         const isPasswordValid = await user.comparePassword(password);
+        console.log('Password Valid:', isPasswordValid);
 
         if (!isPasswordValid) {
-            res.status(401).json({ error: 'Invalid credentials' });
+            res.status(401).json({ error: 'Invalid credentials (Password mismatch)' });
             return;
         }
 
@@ -139,6 +172,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                 email: user.email,
                 registrationNumber: user.registrationNumber,
                 userType: user.userType,
+                isAdmin: user.isAdmin,
                 walletBalance: user.walletBalance,
                 collegePoints: user.collegePoints,
                 department: user.department,
@@ -167,6 +201,7 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
             email: user.email,
             registrationNumber: user.registrationNumber,
             userType: user.userType,
+            isAdmin: user.isAdmin,
             walletBalance: user.walletBalance,
             collegePoints: user.collegePoints,
             department: user.department,

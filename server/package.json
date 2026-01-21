@@ -9,7 +9,8 @@
         "start": "node dist/server.js",
         "test": "jest",
         "test:watch": "jest --watch",
-        "seed": "ts-node src/seed/foodSeed.ts"
+        "seed": "ts-node src/seed/foodSeed.ts",
+        "seed:admin": "ts-node src/seed/adminSeed.ts"
     },
     "keywords": [],
     "author": "",

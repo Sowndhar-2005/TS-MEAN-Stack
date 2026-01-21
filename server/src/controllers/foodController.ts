@@ -16,17 +16,22 @@ export const getAllFoods = async (req: Request, res: Response): Promise<void> =>
             filter.available = available === 'true';
         }
 
-        let query = Food.find(filter);
+        let queryCondition: any = filter;
 
-        // Text search if search parameter provided
+        // Regex search if search parameter provided
         if (search) {
-            query = Food.find({
-                $text: { $search: search as string },
+            const searchRegex = new RegExp(search as string, 'i');
+            queryCondition = {
                 ...filter,
-            });
+                $or: [
+                    { name: searchRegex },
+                    { tags: searchRegex },
+                    { category: searchRegex }
+                ]
+            };
         }
 
-        const foods = await query.sort({ category: 1, name: 1 });
+        const foods = await Food.find(queryCondition).sort({ category: 1, name: 1 });
 
         res.json({ foods, count: foods.length });
     } catch (error: any) {
@@ -81,9 +86,15 @@ export const searchFoods = async (req: Request, res: Response): Promise<void> =>
             return;
         }
 
+        const searchRegex = new RegExp(q as string, 'i');
+
         const foods = await Food.find({
-            $text: { $search: q as string },
             available: true,
+            $or: [
+                { name: searchRegex },
+                { tags: searchRegex },
+                { category: searchRegex }
+            ]
         });
 
         res.json({ foods, count: foods.length });
