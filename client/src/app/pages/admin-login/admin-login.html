@@ -1,0 +1,125 @@
+<!-- Background -->
+<div
+  class="min-vh-100 d-flex align-items-center justify-content-center bg-light p-4 position-relative overflow-hidden"
+>
+  <!-- Decorative Background -->
+  <div
+    class="position-absolute top-0 start-0 w-100 h-100"
+    style="
+      filter: blur(8px);
+      opacity: 0.5;
+      background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAXaeHYJXIE3G-wpclgdLMg_RH5RA8wmyllN4OnN8pxEHxeV6DqZd1WKeOnrPjLpGrSr_QeF3ok_yDn_SUFvefESoxbrJlBWMv4oRhbrFpeYalf-LEHAHnKixUWd0mSD8Q7eFHZwF0ejHlPdcu51Kw2Q2Go7DBSmu20DOocEpajlg-hHpyW3WOcoPwHjBArUowGuEfaZN5muXpVvWRxTAaYCWGopqDs0UVAsypd_-MNvUQihCCTqRO-sUZHgNoHcWAXrWowAQ4s8_I');
+      background-size: cover;
+      background-position: center;
+    "
+  ></div>
+  <div class="position-absolute top-0 start-0 w-100 h-100 bg-white opacity-75"></div>
+
+  <!-- Main Card -->
+  <div
+    class="card shadow-lg border-0 rounded-4 w-100 position-relative z-1"
+    style="max-width: 440px"
+  >
+    <div class="card-body p-4 p-sm-5">
+      <!-- Header -->
+      <div class="text-center mb-5">
+        <div
+          class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-4 mb-3"
+          style="width: 64px; height: 64px"
+        >
+          <i class="bi bi-shield-lock-fill fs-3"></i>
+        </div>
+        <h1 class="h3 fw-bold text-dark mb-1">
+          Admin Login
+        </h1>
+        <p class="text-muted small">
+          Secure access for canteen management
+        </p>
+      </div>
+
+      <!-- Error Message -->
+      @if (errorMessage()) {
+        <div
+          class="alert alert-danger d-flex align-items-center gap-2 mb-4 py-2 small rounded-3"
+          role="alert"
+        >
+          <i class="bi bi-exclamation-circle-fill"></i>
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <!-- Admin Login Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="d-flex flex-column gap-3">
+        <!-- Email Input -->
+        <div>
+          <label class="form-label fw-bold text-muted small ms-1">Admin Email</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0 text-muted ps-3 rounded-start-3">
+              <i class="bi bi-envelope"></i>
+            </span>
+            <input
+              type="email"
+              class="form-control bg-light border-start-0 py-2.5 rounded-end-3"
+              placeholder="admin@college.edu"
+              formControlName="identifier"
+            />
+          </div>
+        </div>
+
+        <!-- Password Input -->
+        <div>
+          <label class="form-label fw-bold text-muted small ms-1">Password</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0 text-muted ps-3 rounded-start-3">
+              <i class="bi bi-lock"></i>
+            </span>
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              class="form-control bg-light border-start-0 border-end-0 py-2.5"
+              placeholder="••••••••"
+              formControlName="password"
+            />
+            <button
+              class="btn btn-light border border-start-0 text-muted pe-3 rounded-end-3"
+              type="button"
+              (click)="togglePassword()"
+            >
+              <i
+                class="bi"
+                [class.bi-eye]="!showPassword()"
+                [class.bi-eye-slash]="showPassword()"
+              ></i>
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary w-100 py-3 rounded-3 fw-bold mt-2 shadow-sm"
+          [disabled]="loginForm.invalid || isLoading()"
+        >
+          @if (isLoading()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Authenticating...
+          } @else {
+            Access Dashboard
+          }
+        </button>
+      </form>
+
+      <!-- Footer Links -->
+      <div class="text-center mt-4 pt-3 border-top">
+        <p class="text-muted small mb-0">
+          Not an admin?
+          <a
+            href="javascript:void(0)"
+            class="fw-bold text-primary text-decoration-none ms-1"
+            (click)="goToUserLogin()"
+          >
+            Go to User Login
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

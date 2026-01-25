@@ -1,0 +1,26 @@
+﻿[33mΓ¥»[39m Building...
+[32mΓ£ö[39m Building...
+Application bundle generation failed. [12.080 seconds] - 2026-01-21T07:49:46.879Z
+
+node.exe : [1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mFailed to inline external 
+stylesheet 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&displ
+ay=swap'.[0m [1m[35m[plugin angular-css-inline-fonts-plugin][0m
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\Sowndhar A\AppData\Roa ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([1m[31m[31mX...nts-plugin][0m:String) [], R 
+   emoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+    src/styles.css:6:12:
+[37m      6 Γöé @import 
+url([32m'https://fonts.googleapis.com/css2?family=Inter:wght@30[37m...
+        Γò╡             [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error: Inlining of fonts failed. An error has occurred while retrieving [4mhttps://fonts.g
+oogleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap[0m over the 
+internet.
+  socket hang up
+
+[39m[22m
