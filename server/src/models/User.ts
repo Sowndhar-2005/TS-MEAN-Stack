@@ -4,9 +4,9 @@ import bcrypt from 'bcryptjs';
 export interface IUser extends Document {
     name: string;
     email: string;
-    registrationNumber: string;
+    registrationNumber?: string;
     password: string;
-    userType: 'dayscholar' | 'hosteller';
+    userType?: 'dayscholar' | 'hosteller';
     isAdmin: boolean;
     department?: string;
     year?: number;
@@ -43,8 +43,9 @@ const userSchema = new Schema<IUser>(
         },
         registrationNumber: {
             type: String,
-            required: [true, 'Registration number is required'],
+            required: false,
             unique: true,
+            sparse: true,
             uppercase: true,
             trim: true,
         },
@@ -57,7 +58,7 @@ const userSchema = new Schema<IUser>(
         userType: {
             type: String,
             enum: ['dayscholar', 'hosteller'],
-            required: true,
+            required: false,
         },
         isAdmin: {
             type: Boolean,
@@ -132,9 +133,5 @@ userSchema.methods.comparePassword = async function (
 ): Promise<boolean> {
     return bcrypt.compare(candidatePassword, this.password);
 };
-
-// Indexes for performance
-userSchema.index({ email: 1 });
-userSchema.index({ registrationNumber: 1 });
 
 export const User = mongoose.model<IUser>('User', userSchema);

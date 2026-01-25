@@ -68,16 +68,21 @@ export const placeOrder = async (req: AuthRequest, res: Response): Promise<void>
 
         await order.save();
 
-        // Deduct payment
+        // Deduct payment and update stats atomically
+        const updateQuery: any = {
+            $inc: {
+                totalSpent: totalAmount,
+                totalOrders: 1
+            }
+        };
+
         if (paymentMethod === 'wallet') {
-            user.walletBalance -= totalAmount;
+            updateQuery.$inc.walletBalance = -totalAmount;
         } else if (paymentMethod === 'collegePoints') {
-            user.collegePoints -= totalAmount;
+            updateQuery.$inc.collegePoints = -totalAmount;
         }
 
-        user.totalSpent += totalAmount;
-        user.totalOrders += 1;
-        await user.save();
+        await User.findByIdAndUpdate(req.user._id, updateQuery);
 
         // Create transaction record
         const transaction = new Transaction({

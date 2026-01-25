@@ -23,7 +23,7 @@ const generateToken = (userId: string): string => {
     return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions);
 };
 
-const ALLOWED_DOMAINS = ['@college.edu', '@gmail.com'];
+const ALLOWED_DOMAINS = [COLLEGE_EMAIL_DOMAIN, '@gmail.com'];
 
 // Helper to validate email domain
 const isValidEmailDomain = (email: string): boolean => {

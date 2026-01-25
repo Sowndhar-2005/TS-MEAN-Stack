@@ -126,7 +126,6 @@ orderSchema.pre('save', async function (next) {
 
 // Indexes
 orderSchema.index({ userId: 1, createdAt: -1 });
-orderSchema.index({ orderId: 1 });
 orderSchema.index({ status: 1 });
 
 export const Order = mongoose.model<IOrder>('Order', orderSchema);

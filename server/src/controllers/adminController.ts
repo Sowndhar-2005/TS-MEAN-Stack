@@ -7,6 +7,14 @@ export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void
     try {
         const users = await User.find({ isAdmin: false }).select('-password').sort({ createdAt: -1 });
 
+        // DEBUG: Check values from DB
+        console.log('[DEBUG] First 3 users stats:', users.slice(0, 3).map(u => ({
+            name: u.name,
+            reg: u.registrationNumber,
+            orders: u.totalOrders,
+            spent: u.totalSpent
+        })));
+
         res.json({
             message: 'Users retrieved successfully',
             count: users.length,

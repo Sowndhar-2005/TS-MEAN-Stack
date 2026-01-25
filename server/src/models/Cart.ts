@@ -85,6 +85,5 @@ const cartSchema = new Schema<ICart>(
 // Index for performance
 cartSchema.index({ userId: 1 });
 cartSchema.index({ sessionId: 1 });
-cartSchema.index({ sharedLink: 1 });
 
 export const Cart = mongoose.model<ICart>('Cart', cartSchema);

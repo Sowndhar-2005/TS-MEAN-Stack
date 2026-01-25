@@ -9,7 +9,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/campus
 const testUsers = [
     {
         name: 'John Doe',
-        email: 'john@college.edu',
+        email: 'john@gmail.com',
         registrationNumber: '21CSR001',
         password: 'password123',
         userType: 'dayscholar' as const,
@@ -21,7 +21,7 @@ const testUsers = [
     },
     {
         name: 'Jane Smith',
-        email: 'jane@college.edu',
+        email: 'jane@gmail.com',
         registrationNumber: '21ECH002',
         password: 'password123',
         userType: 'hosteller' as const,
@@ -45,7 +45,7 @@ const testUsers = [
     },
     {
         name: 'Alice Brown',
-        email: 'alice@college.edu',
+        email: 'alice@gmail.com',
         registrationNumber: '20MEH004',
         password: 'password123',
         userType: 'hosteller' as const,
@@ -96,6 +96,7 @@ const seedUsers = async () => {
 
     } catch (error) {
         console.error('❌ Error seeding users:', error);
+        process.exitCode = 1;
     } finally {
         await mongoose.disconnect();
         console.log('🔌 Disconnected from database');
