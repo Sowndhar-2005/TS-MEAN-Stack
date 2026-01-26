@@ -1,0 +1,390 @@
+<app-top-navbar></app-top-navbar>
+
+<div class="container-fluid px-3 py-2" style="height: calc(100vh - 88px); overflow: hidden">
+  <!-- Compact Header Row -->
+  <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+    <!-- Left: Title + Search -->
+    <div class="d-flex align-items-center gap-3 flex-grow-1" style="max-width: 600px">
+      <h2 class="fw-bold mb-0 text-dark">
+        {{ foodService.selectedCategory() || 'All Items' }}
+      </h2>
+
+      <!-- Search Bar - Moved to top -->
+      <div class="position-relative flex-grow-1 ms-7">
+        <span class="position-absolute top-50 start-0 translate-middle-y ms-2 text-muted">
+          <i class="bi bi-search"></i>
+        </span>
+        <input
+          type="text"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="onSearchChange($event)"
+          class="form-control form-control-sm ps-4 pe-5 rounded-3 border-0 shadow-sm"
+          placeholder="Search food..."
+          style="height: 36px"
+        />
+        @if (searchQuery()) {
+          <span
+            class="position-absolute top-50 end-0 translate-middle-y me-2 text-secondary"
+            style="cursor: pointer"
+            (click)="onSearchChange('')"
+          >
+            <i class="bi bi-x-circle-fill"></i>
+          </span>
+        }
+      </div>
+    </div>
+
+    <!-- Right: Filter + Wallet -->
+    <div class="d-flex align-items-center gap-2">
+      <!-- Filter Button & Dropdown -->
+      <div class="position-relative">
+        <button
+          (click)="toggleFilters()"
+          [class.bg-light]="!showFilters()"
+          [class.bg-primary]="showFilters()"
+          [class.text-secondary]="!showFilters()"
+          [class.text-white]="showFilters()"
+          class="btn border shadow-sm rounded-3 p-0 d-flex align-items-center justify-content-center"
+          style="width: 40px; height: 40px"
+        >
+          <i class="bi bi-funnel"></i>
+          @if (filterType() !== 'all' || sortOrder() !== 'none' || selectedTags().length > 0) {
+            <span
+              class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"
+            >
+              <span class="visually-hidden">Filters active</span>
+            </span>
+          }
+        </button>
+
+        <!-- Filter Dropdown -->
+        @if (showFilters()) {
+          <div
+            class="position-absolute top-100 end-0 mt-2 bg-white rounded-4 shadow-lg p-3 border"
+            style="width: 300px; z-index: 1000"
+          >
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="fw-bold mb-0">Filters</h6>
+              <button
+                (click)="clearFilters()"
+                class="btn btn-link btn-sm text-decoration-none p-0"
+                style="font-size: 12px"
+              >
+                Clear All
+              </button>
+            </div>
+
+            <!-- Type Filter -->
+            <div class="mb-3">
+              <label class="small fw-bold text-muted mb-2 d-block">Type</label>
+              <div class="btn-group w-100" role="group">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="type"
+                  id="typeAll"
+                  [checked]="filterType() === 'all'"
+                  (change)="setFilterType('all')"
+                />
+                <label class="btn btn-outline-secondary btn-sm" for="typeAll">All</label>
+
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="type"
+                  id="typeVeg"
+                  [checked]="filterType() === 'veg'"
+                  (change)="setFilterType('veg')"
+                />
+                <label class="btn btn-outline-success btn-sm" for="typeVeg">Veg</label>
+
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="type"
+                  id="typeNonVeg"
+                  [checked]="filterType() === 'non-veg'"
+                  (change)="setFilterType('non-veg')"
+                />
+                <label class="btn btn-outline-danger btn-sm" for="typeNonVeg">Non-Veg</label>
+              </div>
+            </div>
+
+            <!-- Sort Filter -->
+            <div class="mb-3">
+              <label class="small fw-bold text-muted mb-2 d-block">Price</label>
+              <div class="btn-group w-100" role="group">
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="sort"
+                  id="sortNone"
+                  [checked]="sortOrder() === 'none'"
+                  (change)="setSortOrder('none')"
+                />
+                <label class="btn btn-outline-secondary btn-sm" for="sortNone">Default</label>
+
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="sort"
+                  id="sortAsc"
+                  [checked]="sortOrder() === 'asc'"
+                  (change)="setSortOrder('asc')"
+                />
+                <label class="btn btn-outline-secondary btn-sm" for="sortAsc">Low to High</label>
+
+                <input
+                  type="radio"
+                  class="btn-check"
+                  name="sort"
+                  id="sortDesc"
+                  [checked]="sortOrder() === 'desc'"
+                  (change)="setSortOrder('desc')"
+                />
+                <label class="btn btn-outline-secondary btn-sm" for="sortDesc">High to Low</label>
+              </div>
+            </div>
+
+            <!-- Tags Filter -->
+            @if (availableTags().length > 0) {
+              <div>
+                <label class="small fw-bold text-muted mb-2 d-block">Tags</label>
+                <div class="d-flex flex-wrap gap-1">
+                  @for (tag of availableTags(); track tag) {
+                    <span
+                      (click)="toggleTag(tag)"
+                      [class.bg-primary]="selectedTags().includes(tag)"
+                      [class.text-white]="selectedTags().includes(tag)"
+                      [class.bg-light]="!selectedTags().includes(tag)"
+                      [class.text-secondary]="!selectedTags().includes(tag)"
+                      class="badge rounded-pill border fw-normal cursor-pointer user-select-none"
+                      style="cursor: pointer"
+                    >
+                      {{ tag }}
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Compact Wallet -->
+      <div
+        class="d-flex align-items-center gap-2 bg-success-subtle border border-success-subtle px-3 py-2 rounded-3 shadow-sm"
+      >
+        <div
+          class="d-flex align-items-center justify-content-center bg-success bg-opacity-25 text-success rounded-circle"
+          style="width: 32px; height: 32px"
+        >
+          <i class="bi bi-wallet2"></i>
+        </div>
+        <div class="d-flex flex-column">
+          <small
+            class="fw-bold text-success text-uppercase"
+            style="font-size: 8px; letter-spacing: 0.5px; line-height: 1"
+            >Balance</small
+          >
+          <span class="h5 fw-bold text-success mb-0" style="line-height: 1"
+            >₹{{ userService.walletBalance() | number }}</span
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3" style="height: calc(100vh - 180px)">
+    <!-- Compact Sidebar -->
+    <div class="col-lg-3">
+      <div class="d-flex flex-column gap-3 h-100">
+        <!-- Categories - Compact -->
+        <div class="card border-0 shadow-sm rounded-3 p-2 flex-shrink-0">
+          <h6
+            class="d-flex align-items-center gap-2 fw-bold mb-2 px-2 text-dark"
+            style="font-size: 14px"
+          >
+            <i class="bi bi-cup-hot text-warning"></i> Categories
+          </h6>
+          <div class="d-flex flex-column gap-1">
+            <!-- All Items Option -->
+            <button
+              (click)="selectCategory('')"
+              [class.btn-primary]="foodService.selectedCategory() === ''"
+              [class.btn-light]="foodService.selectedCategory() !== ''"
+              [class.shadow-sm]="foodService.selectedCategory() === ''"
+              class="btn btn-sm w-100 d-flex align-items-center justify-content-between p-2 rounded-3 border-0"
+              [class.bg-transparent]="foodService.selectedCategory() !== ''"
+              [class.text-secondary]="foodService.selectedCategory() !== ''"
+            >
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-grid-3x3" style="font-size: 14px"></i>
+                <span
+                  [class.fw-bold]="foodService.selectedCategory() === ''"
+                  [class.fw-medium]="foodService.selectedCategory() !== ''"
+                  style="font-size: 13px"
+                  >All Items</span
+                >
+              </div>
+              <span
+                [class.bg-white]="foodService.selectedCategory() === ''"
+                [class.text-primary]="foodService.selectedCategory() === ''"
+                [class.bg-secondary-subtle]="foodService.selectedCategory() !== ''"
+                [class.text-secondary]="foodService.selectedCategory() !== ''"
+                class="badge rounded-pill"
+                style="font-size: 10px"
+                >{{ foodService.allFoods().length }}</span
+              >
+            </button>
+
+            <!-- Static Categories - Always Visible -->
+            @for (category of allCategories(); track category) {
+              <button
+                (click)="selectCategory(category)"
+                [class.btn-primary]="foodService.selectedCategory() === category"
+                [class.btn-light]="foodService.selectedCategory() !== category"
+                [class.shadow-sm]="foodService.selectedCategory() === category"
+                class="btn btn-sm w-100 d-flex align-items-center justify-content-between p-2 rounded-3 border-0"
+                [class.bg-transparent]="foodService.selectedCategory() !== category"
+                [class.text-secondary]="foodService.selectedCategory() !== category"
+              >
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-{{ getCategoryIcon(category) }}" style="font-size: 14px"></i>
+                  <span
+                    [class.fw-bold]="foodService.selectedCategory() === category"
+                    [class.fw-medium]="foodService.selectedCategory() !== category"
+                    style="font-size: 13px"
+                    >{{ category }}</span
+                  >
+                </div>
+                <span
+                  [class.bg-white]="foodService.selectedCategory() === category"
+                  [class.text-primary]="foodService.selectedCategory() === category"
+                  [class.bg-secondary-subtle]="foodService.selectedCategory() !== category"
+                  [class.text-secondary]="foodService.selectedCategory() !== category"
+                  class="badge rounded-pill"
+                  style="font-size: 10px"
+                  >{{ getCategoryCount(category) }}</span
+                >
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Invite Card - Compact -->
+        <!-- <div class="card bg-primary text-white border-0 rounded-3 p-3 shadow flex-shrink-0">
+          <div class="text-center">
+            <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-25 rounded-circle mb-2" style="width: 40px; height: 40px;">
+              <i class="bi bi-people fs-5"></i>
+            </div>
+            <h6 class="fw-bold mb-1" style="font-size: 14px;">Eat Together</h6>
+            <p class="small text-white-50 mb-2" style="font-size: 11px;">Invite friends to order!</p>
+            <button class="btn btn-light btn-sm text-primary fw-bold w-100 rounded-3 py-1" style="font-size: 12px;">Send Invite</button>
+          </div>
+        </div> -->
+      </div>
+    </div>
+
+    <!-- Main Content - Scrollable -->
+    <div class="col-lg-9" style="height: 100%; overflow-y: auto; overflow-x: hidden">
+      <!-- Main Grid (Used for both All Items and Specific Categories) -->
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 pb-5">
+         @for (food of filteredFoods(); track food._id) {
+            <ng-container *ngTemplateOutlet="foodCard; context: { $implicit: food }"></ng-container>
+         } @empty {
+            <ng-container *ngTemplateOutlet="emptyState"></ng-container>
+         }
+      </div>
+
+      <!-- Reusable Food Card Template -->
+      <ng-template #foodCard let-food>
+        <div class="col">
+          <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden food-card-hover">
+            <div class="position-relative ratio ratio-16x9">
+              <div
+                class="w-100 h-100"
+                [style.background-image]="'url(' + food.image + ')'"
+                style="background-size: cover; background-position: center"
+              ></div>
+
+              <!-- Stock Badges -->
+              @if (food.stockQuantity === 0) {
+                <div
+                  class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center"
+                >
+                  <span class="badge bg-dark px-3 py-2 rounded-pill shadow-sm">Out of Stock</span>
+                </div>
+              } @else if (food.stockQuantity <= 5) {
+                <div class="position-absolute top-0 right-0 m-2">
+                  <span class="badge bg-warning text-dark shadow-sm"
+                    >Only {{ food.stockQuantity }} left</span
+                  >
+                </div>
+              }
+            </div>
+
+            <div class="card-body p-3 d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="fw-bold text-dark mb-0 text-truncate" [title]="food.name">
+                  {{ food.name }}
+                </h6>
+                @if (food.isVegetarian) {
+                  <img
+                    src="https://img.icons8.com/color/48/vegetarian-food-symbol.png"
+                    alt="Veg"
+                    width="16"
+                    height="16"
+                  />
+                } @else {
+                  <img
+                    src="https://img.icons8.com/color/48/non-vegetarian-food-symbol.png"
+                    alt="Non-Veg"
+                    width="16"
+                    height="16"
+                  />
+                }
+              </div>
+
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <span class="h5 fw-bold text-dark mb-0">₹{{ food.price }}</span>
+                @if (food.stockQuantity > 5) {
+                  <small class="text-muted" style="font-size: 0.75rem"
+                    >{{ food.stockQuantity }}+ available</small
+                  >
+                }
+              </div>
+
+              <div class="d-flex gap-2 mt-auto">
+                <button
+                  (click)="addToCartItem(food, 1)"
+                  [disabled]="food.stockQuantity === 0"
+                  class="btn btn-outline-primary flex-grow-1 fw-bold rounded-3 py-2 shadow-sm d-flex align-items-center justify-content-center gap-1"
+                >
+                  <i class="bi bi-cart-plus"></i>
+                  Add
+                </button>
+                <button
+                  (click)="orderNow(food)"
+                  [disabled]="food.stockQuantity === 0"
+                  class="btn btn-primary flex-grow-1 fw-bold rounded-3 py-2 shadow-sm d-flex align-items-center justify-content-center gap-1"
+                >
+                  Order
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+
+      <!-- Empty State Template -->
+      <ng-template #emptyState>
+        <div class="col-12 text-center py-5 w-100">
+          <i class="bi bi-search fs-1 text-muted"></i>
+          <h4 class="text-muted mt-3">No items found</h4>
+          <p class="text-muted">Try adjusting your search or filters</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>

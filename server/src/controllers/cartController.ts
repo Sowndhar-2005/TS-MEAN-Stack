@@ -28,7 +28,7 @@ export const getCart = async (req: AuthRequest, res: Response): Promise<void> =>
 // Add item to cart
 export const addToCart = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { foodId, quantity, specialInstructions } = req.body;
+        const { foodId, quantity, specialInstructions, customGroup } = req.body;
 
         // Validate food exists
         const food = await Food.findById(foodId);
@@ -52,9 +52,13 @@ export const addToCart = async (req: AuthRequest, res: Response): Promise<void> 
             });
         }
 
-        // Check if item already exists in cart
+        // Check if item already exists in cart with same food, group, and instructions
+        // Note: Comparing instructions can be tricky if they differ slightly, 
+        // but typically we care about food + group for merging.
         const existingItemIndex = cart.items.findIndex(
-            (item) => item.foodId.toString() === foodId
+            (item) =>
+                item.foodId.toString() === foodId &&
+                (item.customGroup || null) === (customGroup || null)
         );
 
         if (existingItemIndex > -1) {
@@ -69,6 +73,7 @@ export const addToCart = async (req: AuthRequest, res: Response): Promise<void> 
                 foodId,
                 quantity,
                 specialInstructions,
+                customGroup: customGroup || null,
                 price: food.price,
             });
         }
@@ -81,6 +86,7 @@ export const addToCart = async (req: AuthRequest, res: Response): Promise<void> 
         res.json({
             message: 'Item added to cart',
             cart,
+            items: cart.items,
             total,
         });
     } catch (error: any) {
@@ -93,7 +99,7 @@ export const addToCart = async (req: AuthRequest, res: Response): Promise<void> 
 export const updateCartItem = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { itemId } = req.params;
-        const { quantity } = req.body;
+        const { quantity, customGroup, specialInstructions } = req.body;
 
         const cart = await Cart.findOne({ userId: req.user._id });
 
@@ -109,11 +115,14 @@ export const updateCartItem = async (req: AuthRequest, res: Response): Promise<v
             return;
         }
 
-        if (quantity <= 0) {
-            // Remove item
+        // If quantity is provided and <= 0, remove item
+        if (quantity !== undefined && quantity <= 0) {
             cart.items.splice(itemIndex, 1);
         } else {
-            cart.items[itemIndex].quantity = quantity;
+            // Update fields if provided
+            if (quantity !== undefined) cart.items[itemIndex].quantity = quantity;
+            if (customGroup !== undefined) cart.items[itemIndex].customGroup = customGroup;
+            if (specialInstructions !== undefined) cart.items[itemIndex].specialInstructions = specialInstructions;
         }
 
         await cart.save();
@@ -124,11 +133,52 @@ export const updateCartItem = async (req: AuthRequest, res: Response): Promise<v
         res.json({
             message: 'Cart updated',
             cart,
+            items: cart.items,
             total,
         });
     } catch (error: any) {
         console.error('Update cart item error:', error);
         res.status(500).json({ error: 'Failed to update cart item' });
+    }
+};
+
+// Update cart group
+export const updateCartGroup = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { groupName, itemIds } = req.body; // itemIds is array of strings
+
+        const cart = await Cart.findOne({ userId: req.user._id });
+
+        if (!cart) {
+            res.status(404).json({ error: 'Cart not found' });
+            return;
+        }
+
+        cart.items.forEach(item => {
+            const itemId = item._id?.toString();
+            if (itemId && itemIds.includes(itemId)) {
+                // Assign to group
+                item.customGroup = groupName;
+            } else if (item.customGroup === groupName) {
+                // If it was in this group but not in the new selection, remove it from group
+                item.customGroup = null as any; // Cast to any to allow null if type is stringent, though helper allows it
+            }
+        });
+
+        await cart.save();
+        await cart.populate('items.foodId');
+
+        const total = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+        res.json({
+            message: 'Cart group updated',
+            cart,
+            items: cart.items,
+            total,
+        });
+    } catch (error: any) {
+        console.error('Update cart group error:', error);
+        res.status(500).json({ error: 'Failed to update cart group' });
     }
 };
 
@@ -154,6 +204,7 @@ export const removeFromCart = async (req: AuthRequest, res: Response): Promise<v
         res.json({
             message: 'Item removed from cart',
             cart,
+            items: cart.items,
             total,
         });
     } catch (error: any) {
