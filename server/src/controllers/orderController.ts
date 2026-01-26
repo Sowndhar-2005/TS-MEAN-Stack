@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import mongoose from 'mongoose';
 import { Order } from '../models/Order';
 import { Cart } from '../models/Cart';
 import { User } from '../models/User';
@@ -9,19 +10,28 @@ import { calculateOrderTotal } from '../utils/logicHelpers';
 
 // Place order
 export const placeOrder = async (req: AuthRequest, res: Response): Promise<void> => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
         const { paymentMethod, items: directItems } = req.body;
         let orderItems: any[] = [];
         let rawSubtotal = 0;
 
+        // 1. Prepare Order Items and Validate Stock
         if (directItems && Array.isArray(directItems) && directItems.length > 0) {
             // Direct Order (items provided in body)
             for (const item of directItems) {
-                const food = await Food.findById(item.foodId || item.food?._id);
+                const foodId = item.foodId || item.food?._id;
+                const food = await Food.findById(foodId).session(session);
+
                 if (!food) {
-                    res.status(404).json({ error: `Food item not found: ${item.foodId}` });
-                    return;
+                    throw new Error(`Food item not found: ${foodId}`);
                 }
+                if (!food.available || food.stockQuantity < item.quantity) {
+                    throw new Error(`Insufficient stock for item: ${food.name}`);
+                }
+
                 orderItems.push({
                     foodId: food._id,
                     name: food.name,
@@ -33,59 +43,68 @@ export const placeOrder = async (req: AuthRequest, res: Response): Promise<void>
             }
 
             // Optional: Remove these items from cart if they exist there
-            const cart = await Cart.findOne({ userId: req.user._id });
+            const cart = await Cart.findOne({ userId: req.user._id }).session(session);
             if (cart) {
                 const orderedFoodIds = orderItems.map(oi => oi.foodId.toString());
                 cart.items = cart.items.filter(item => !orderedFoodIds.includes(item.foodId.toString()));
-                await cart.save();
+                await cart.save({ session });
             }
         } else {
             // Cart-based Order
-            const cart = await Cart.findOne({ userId: req.user._id }).populate('items.foodId');
+            const cart = await Cart.findOne({ userId: req.user._id }).populate('items.foodId').session(session);
 
             if (!cart || cart.items.length === 0) {
-                res.status(400).json({ error: 'Cart is empty' });
-                return;
+                throw new Error('Cart is empty');
             }
 
-            orderItems = cart.items.map((item: any) => ({
-                foodId: item.foodId._id,
-                name: item.foodId.name,
-                quantity: item.quantity,
-                price: item.price,
-                specialInstructions: item.specialInstructions,
-            }));
-            rawSubtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            for (const item of cart.items) {
+                const food: any = item.foodId;
+
+                // Fetch fresh Food document to ensure latest stock
+                const freshFood = await Food.findById(food._id).session(session);
+
+                if (!freshFood) {
+                    throw new Error(`Food not found: ${food.name}`);
+                }
+                if (!freshFood.available || freshFood.stockQuantity < item.quantity) {
+                    throw new Error(`Insufficient stock for item: ${freshFood.name}`);
+                }
+
+                orderItems.push({
+                    foodId: freshFood._id,
+                    name: freshFood.name,
+                    quantity: item.quantity,
+                    price: freshFood.price,
+                    specialInstructions: item.specialInstructions,
+                });
+                rawSubtotal += freshFood.price * item.quantity;
+            }
 
             // Clear cart after placing order
             cart.items = [];
-            await cart.save();
+            await cart.save({ session });
         }
 
-        // Calculate totals
+        // 2. Calculate totals
         const { subtotal, tax, totalAmount } = calculateOrderTotal(rawSubtotal);
 
-        // Get user
-        const user = await User.findById(req.user._id);
+        // 3. Validate payment method and balance
+        const user = await User.findById(req.user._id).session(session);
         if (!user) {
-            res.status(404).json({ error: 'User not found' });
-            return;
+            throw new Error('User not found');
         }
 
-        // Validate payment method and balance
         if (paymentMethod === 'wallet') {
             if (user.walletBalance < totalAmount) {
-                res.status(400).json({ error: 'Insufficient wallet balance' });
-                return;
+                throw new Error('Insufficient wallet balance');
             }
         } else if (paymentMethod === 'collegePoints') {
             if (user.collegePoints < totalAmount) {
-                res.status(400).json({ error: 'Insufficient college points' });
-                return;
+                throw new Error('Insufficient college points');
             }
         }
 
-        // Create order
+        // 4. Create order
         const order = new Order({
             userId: req.user._id,
             items: orderItems,
@@ -99,9 +118,9 @@ export const placeOrder = async (req: AuthRequest, res: Response): Promise<void>
             cookingTimer: 15,
         });
 
-        await order.save();
+        await order.save({ session });
 
-        // Deduct payment and update stats atomically
+        // 5. Deduct payment and update stats
         const updateQuery: any = {
             $inc: {
                 totalSpent: totalAmount,
@@ -115,9 +134,9 @@ export const placeOrder = async (req: AuthRequest, res: Response): Promise<void>
             updateQuery.$inc.collegePoints = -totalAmount;
         }
 
-        await User.findByIdAndUpdate(req.user._id, updateQuery);
+        await User.findByIdAndUpdate(req.user._id, updateQuery, { session });
 
-        // Create transaction record
+        // 6. Create transaction record
         const transaction = new Transaction({
             userId: req.user._id,
             orderId: order._id,
@@ -125,21 +144,29 @@ export const placeOrder = async (req: AuthRequest, res: Response): Promise<void>
             type: 'debit',
             paymentMethod,
             status: 'completed',
-            description: `Order ${order.orderId}`,
+            description: `Order ${order.orderId || order._id}`,
         });
-        await transaction.save();
+        await transaction.save({ session });
 
-        // Update food stock
-        for (const item of orderItems) {
-            await Food.findByIdAndUpdate(item.foodId, {
-                $inc: { stockQuantity: -item.quantity },
-            });
+        // 7. Update food stock (Optimized: BulkWrite)
+        const bulkOps = orderItems.map(item => ({
+            updateOne: {
+                filter: { _id: item.foodId },
+                update: { $inc: { stockQuantity: -item.quantity } }
+            }
+        }));
+
+        if (bulkOps.length > 0) {
+            await Food.bulkWrite(bulkOps, { session });
         }
 
-        // Update order with transaction ID
+        // 8. Update order with transaction ID
         order.transactionId = transaction._id.toString();
         order.paymentStatus = 'completed';
-        await order.save();
+        await order.save({ session });
+
+        // Commit Transaction
+        await session.commitTransaction();
 
         res.status(201).json({
             message: 'Order placed successfully',
@@ -150,8 +177,17 @@ export const placeOrder = async (req: AuthRequest, res: Response): Promise<void>
                     : (paymentMethod === 'collegePoints' ? (user.collegePoints - totalAmount) : 0),
         });
     } catch (error: any) {
+        // Abort Transaction
+        await session.abortTransaction();
         console.error('Place order error:', error);
-        res.status(500).json({ error: 'Failed to place order' });
+
+        const errorMessage = error.message || 'Failed to place order';
+        // Determine status code based on error type
+        const statusCode = errorMessage.includes('Insufficient') || errorMessage.includes('Cart is empty') ? 400 : 500;
+
+        res.status(statusCode).json({ error: errorMessage });
+    } finally {
+        session.endSession();
     }
 };
 
