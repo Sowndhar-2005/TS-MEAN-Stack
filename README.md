@@ -1,154 +1,113 @@
-# Campus Canteen Food Hub 🍔🍟
+<div align="center">
 
-A modern, full-stack food ordering application designed for campus students. Built with the MEAN stack (MongoDB, Express, Angular, Node.js), it features a seamless ordering experience, real-time cart management, and a responsive UI.
+# TS-MEAN-Stack Campus Canteen
 
-## 🛠️ Technology Stack
+<img src="https://img.shields.io/badge/Angular_21-DD0031?style=for-the-badge&logo=angular&logoColor=white" />
+<img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" />
+<img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+<img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" />
 
-### Frontend (Client)
+<p>A high-performance, type-safe Campus Canteen Food Hub built with the modern MEAN stack.</p>
 
-- **Framework**: Angular (Latest Version)
-  - **Standalone Components**: Modular architecture without NgModules.
-  - **Signals**: For reactive state management (`cartItemCount`, `orderItemCount`).
-  - **Dependency Injection**: Modern `inject()` based services.
-- **Styling**: Bootstrap 5 + Custom CSS
-  - Responsive grid layout (`col-lg-7`, `col-lg-5`).
-  - Custom utility classes for glassmorphism and spacing.
-  - Bootstrap Icons (`bi-cart`, `bi-trash3-fill`).
-- **Routing**: Angular Router (Lazy loading ready).
+</div>
 
-### Backend (Server)
+## 📸 Visual Gallery
 
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Language**: TypeScript
-- **ODM**: Mongoose (for MongoDB interactions).
-- **Authentication**: JsonWebToken (JWT).
-
-### Database
-
-- **Database**: MongoDB (NoSQL)
-  - Stores `Foods`, `Users`, `Orders`.
+<div align="center" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+  <div>
+    <h4>Profile</h4>
+    <img src="https://via.placeholder.com/300x500?text=Profile+UI" alt="Profile UI" width="200" />
+  </div>
+  <div>
+    <h4>Menu</h4>
+    <img src="https://via.placeholder.com/300x500?text=Menu+UI" alt="Menu UI" width="200" />
+  </div>
+  <div>
+    <h4>Cart</h4>
+    <img src="https://via.placeholder.com/300x500?text=Cart+UI" alt="Cart UI" width="200" />
+  </div>
+</div>
 
 ---
 
-## 📂 Project Structure
+## ⚙️ The TS-Node Engine
 
-### Frontend (`client/src/app`)
+This project leverages the power of **Node.js with TypeScript** to ensure type safety, scalability, and maintainability.
 
+### Build-Run Cycle
+
+1.  **Development**:
+    -   We use **ts-node** to execute TypeScript directly without pre-compilation.
+    -   **nodemon** watches for file changes and restarts the server instantly, providing a rapid feedback loop.
+    -   *Benefit*: Fast iteration and immediate error detection during feature development (e.g., testing split-bill logic).
+
+2.  **Safety**:
+    -   **Strict TypeScript types** are enforced throughout the backend.
+    -   Prevents common runtime errors, such as accidentally paying with a string or floating-point precision issues in tax calculations.
+    -   *Benefit*: Robust financial transactions and reliable role-based access control.
+
+3.  **Production**:
+    -   The **tsc** compiler transpiles the TypeScript code into optimized JavaScript.
+    -   Output is stored in a clean `/dist` folder, ready for deployment.
+    -   *Benefit*: High-performance execution with minimal overhead in the production environment.
+
+---
+
+## 🧠 Key Logic Table
+
+| Feature | Implementation Logic |
+| :--- | :--- |
+| **Identity** | Regex-based detection checks for 'H' in Registration Number or 'hostel' in Email to assign Hosteller/Day Scholar roles. |
+| **Finance** | Users start with a ₹3,000 wallet. Orders include a precise 5% tax calculation using integer arithmetic to prevent floating-point errors. |
+| **Collaboration** | Shared cart sessions allow multi-user ordering via unique link generation and secure ObjectId verification. |
+| **Timeline** | Real-time 15-minute cooking countdown per order, tracked from the server-side `cookingStartTime`. |
+
+---
+
+## 📚 API Documentation
+
+| Endpoint | Method | Description | Inputs (Body/Params) | TS Interface |
+| :--- | :--- | :--- | :--- | :--- |
+| `/api/auth/register` | POST | Register a new user | `name`, `email`, `registrationNumber`, `password` | `IUser` |
+| `/api/auth/login` | POST | User login | `identifier` (Email/RegNo), `password` | `AuthRequest` |
+| `/api/food` | GET | List available food | - | `IFood[]` |
+| `/api/cart/add` | POST | Add item to cart | `foodId`, `quantity`, `specialInstructions` | `ICartItem` |
+| `/api/cart/shared` | POST | Create shared link | - | `ICart` |
+| `/api/cart/join/:link`| POST | Join shared cart | `sharedLink` (param) | `ICart` |
+| `/api/orders` | POST | Place an order | `paymentMethod` | `IOrder` |
+
+---
+
+## 🚀 Installation Guide
+
+Follow these steps to set up the environment and start the application.
+
+### 1. Clone & Install Dependencies
+
+```bash
+git clone https://github.com/your-repo/ts-mean-stack.git
+cd ts-mean-stack
+cd server
+npm install
 ```
-src/app/
-├── interceptors/           # HTTP Interceptors (Auth, Error handling)
-├── pages/                  # Main route components
-│   ├── menu/               # Menu Page (Food listing, Search, Categories)
-│   ├── order/              # Order Page (Active Order, Order History)
-│   ├── cart/               # Cart Page (Checkout flow)
-│   ├── invite/             # Invite Friends Page
-│   └── profile/            # User Profile Page
-├── services/               # Global Data Services
-│   ├── food.service.ts     # API calls to fetch food data
-│   ├── cart.service.ts     # Client-side cart management
-│   ├── order.service.ts    # Order state management
-│   └── auth.service.ts     # User authentication
-├── shared/                 # Reusable Components
-│   └── top-navbar/         # Responsive Navbar with Badge Counters
-├── app.config.ts           # Application config (Providers)
-├── app.routes.ts           # Main Routing definition
-└── app.ts                  # Root Component
+
+### 2. Configure Environment
+
+Create a `.env` file in the `server` directory (or use defaults).
+
+```bash
+# Optional: Initialize TypeScript config if needed (already included)
+# npx tsc --init
 ```
 
-### Backend (`server/src`)
+### 3. Seed Database & Run
 
-```
-src/
-├── config/                 # Configuration (DB Connection)
-├── controllers/            # Logic for handling requests
-├── middleware/             # Express Middleware (Auth, Validation)
-├── models/                 # Mongoose Schemas (Food, User, Order)
-├── routes/                 # API Route Definitions
-├── seed/                   # Database seeding scripts
-└── server.ts               # Entry point
+```bash
+# Seed the database with initial food items
+npm run seed
+
+# Start the development server
+npm run dev
 ```
 
----
-
-## 🚀 Key Features
-
-### 1. Menu Page (`/menu`)
-
-- **Dynamic Food Grid**: Displays food items with images, prices, and descriptions.
-- **Category Filtering**: Filter by Breakfast, Lunch, Snacks, etc.
-- **Real-time Search**: Search foods by name instantly.
-- **Cart & Order Actions**:
-  - **"Order Now"**: Directly adds item to Active Order and stays on page with a success toast.
-  - **"Add to Cart"**: Adds to shopping cart for building combos.
-  - **Quantity Controls**: Adjust quantity directly on the card before adding.
-
-### 2. Order Page (`/orders`)
-
-- **Dual-Pane Layout**:
-  - **Left**: Detailed view of selected item with large image and actions.
-  - **Right**: Scrollable list of ordered items (Stack view).
-- **Interactive List**:
-  - Click any item in the list to view details on the left.
-  - **Delete Action**: Remove items with styled trash button.
-  - **Navigation**: "+" button to quickly return to menu.
-- **Visuals**: No-scrollbar design for a clean look, responsive layouts.
-
-### 3. Shared Services
-
-- **CartService**: Manages "Combo" building. Persistent across pages.
-- **OrderService**: Manages "Active Orders" (Immediate orders).
-- **Navbar Badges**: Real-time counter showing number of unique items in active order/cart.
-
----
-
-## 📡 API Documentation
-
-### Food Endpoints
-
-| Method | Endpoint                        | Description                        |
-| :----- | :------------------------------ | :--------------------------------- |
-| `GET`  | `/api/foods`                    | Get all available food items.      |
-| `GET`  | `/api/foods/search/:searchTerm` | Search foods by name.              |
-| `GET`  | `/api/foods?category=Name`      | Filter foods by category tag.      |
-| `GET`  | `/api/foods/:foodId`            | Get details of a single food item. |
-
-### User Endpoints
-
-| Method | Endpoint              | Description                       |
-| :----- | :-------------------- | :-------------------------------- |
-| `POST` | `/api/users/login`    | Authenticate user and return JWT. |
-| `POST` | `/api/users/register` | Register a new user.              |
-
-### Order Endpoints (Planned)
-
-| Method | Endpoint                   | Description                   |
-| :----- | :------------------------- | :---------------------------- |
-| `POST` | `/api/orders`              | Create a new order.           |
-| `GET`  | `/api/orders/user/:userId` | Get order history for a user. |
-
----
-
-## 🏃‍♂️ How to Run
-
-1. **Start Backend**:
-
-   ```bash
-   cd server
-   npm run dev
-   # Runs on http://localhost:5000 (connected to MongoDB)
-   ```
-
-2. **Start Frontend**:
-
-   ```bash
-   cd client
-   ng serve
-   # Runs on http://localhost:4200
-   ```
-
-3. **Browse**: Open `http://localhost:4200` to view the app.
-
----
-
-Created with ❤️ for Campus Canteen.
+The server will start at `http://localhost:5000` (or your configured port).

@@ -2,21 +2,12 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
 import { AuthRequest } from '../middleware/auth';
+import { detectUserType } from '../utils/logicHelpers';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 const DEFAULT_WALLET_BALANCE = Number(process.env.DEFAULT_WALLET_BALANCE) || 3000;
 const COLLEGE_EMAIL_DOMAIN = process.env.COLLEGE_EMAIL_DOMAIN || '@college.edu';
-
-// Helper function to detect user type
-const detectUserType = (email: string, registrationNumber: string): 'dayscholar' | 'hosteller' => {
-    // Logic: If registration number starts with specific patterns or email domain
-    // For now, simple logic: Hostellers have 'H' in registration number
-    if (registrationNumber.includes('H') || email.includes('hostel')) {
-        return 'hosteller';
-    }
-    return 'dayscholar';
-};
 
 // Generate JWT token
 const generateToken = (userId: string): string => {
@@ -29,8 +20,6 @@ const ALLOWED_DOMAINS = [COLLEGE_EMAIL_DOMAIN, '@gmail.com'];
 const isValidEmailDomain = (email: string): boolean => {
     return ALLOWED_DOMAINS.some(domain => email.endsWith(domain));
 };
-
-// ... (keep detectUserType and generateToken as is)
 
 // Register new user
 export const register = async (req: Request, res: Response): Promise<void> => {
