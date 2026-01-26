@@ -1,168 +1,124 @@
-# TS-MEAN-Stack Campus Canteen
-
 <div align="center">
-
-<img width="48" height="48" src="https://img.icons8.com/color/48/mongodb.png" alt="mongodb"/>
-<img width="50" height="50" src="https://img.icons8.com/ios/50/express-js.png" alt="express-js"/>
-<img width="48" height="48" src="https://img.icons8.com/color/48/angularjs.png" alt="angularjs"/>
-<img width="48" height="48" src="https://img.icons8.com/fluency/48/node-js.png" alt="node-js"/> 
-
-<p><strong>A high-performance, type-safe Campus Canteen Food Hub built with the modern MEAN stack.</strong></p>
-
+  <h1>⚡ Campus Canteen Food Hub ⚡</h1>
+  <p>
+    <img src="https://img.shields.io/badge/Angular-v21-dd0031?style=for-the-badge&logo=angular" alt="Angular">
+    <img src="https://img.shields.io/badge/TypeScript-v5.0-blue?style=for-the-badge&logo=typescript" alt="TypeScript">
+    <img src="https://img.shields.io/badge/Node.js-v18-green?style=for-the-badge&logo=node.js" alt="Node.js">
+    <img src="https://img.shields.io/badge/MongoDB-v6.0-green?style=for-the-badge&logo=mongodb" alt="MongoDB">
+  </p>
 </div>
 
 ---
 
-## 📖 About the Project
+### 🎯 Project Motive
 
-The **Campus Canteen Food Hub** is a full-stack web application designed to streamline food ordering for university students. It addresses common challenges like long queues, payment confusion, and lack of menu visibility.
+The primary motive behind the Campus Canteen Food Hub is to digitize and simplify the daily dining experience of university students through a unified, type-safe ecosystem. By leveraging a Full-Stack TypeScript (MEAN) architecture, the project aims to solve three core campus challenges:
 
-The system distinguishes between **Hostellers** and **Day Scholars**, offers a digital wallet for seamless payments, and introduces a **Collaborative Cart** for group ordering. Built with **Angular 21** on the frontend and **Node.js/Express** with **TypeScript** on the backend, it ensures type safety and high performance.
-
----
-
-## ⚙️ Node.js with TypeScript Configuration
-
-This project uses a robust **TypeScript** configuration to ensure code quality and prevent runtime errors.
-
-### The Engine
-*   **Node.js**: The runtime environment.
-*   **TypeScript**: A typed superset of JavaScript that compiles to plain JavaScript.
-
-### Workflow
-1.  **Development (`npm run dev`)**:
-    *   **`ts-node`**: We use `ts-node` to execute TypeScript files directly in memory, skipping the manual compilation step. This makes development incredibly fast.
-    *   **`nodemon`**: Wraps `ts-node` to watch for file changes. When you save a file, the server restarts automatically.
-2.  **Production (`npm start`)**:
-    *   **`tsc`**: The TypeScript Compiler builds the project into the `dist/` folder.
-    *   **Optimization**: The `dist/` folder contains optimized, pure JavaScript files ready for deployment.
-
-### `tsconfig.json` Highlights
-*   **`"strict": true`**: Enables all strict type-checking options (no implicit `any`, strict null checks). This forces us to write safer code.
-*   **`"target": "ES2020"`**: Compiles to modern JavaScript features (like async/await).
-*   **`"module": "commonjs"`**: Ensures compatibility with Node.js.
+1.  **Efficiency**: Eliminating physical queues with a digital menu and real-time cooking tracking.
+2.  **Identity-Based Logic**: Automatically tailoring the experience for Hostellers vs. Day Scholars using smart registration detection.
+3.  **Collaborative Dining**: Introducing a unique Shared Cart system that allows students to coordinate group orders and manage split-bill payments seamlessly.
 
 ---
 
-## 📂 Project Structure
+### 🔧 Technical Configuration Guide
 
-```plaintext
-root
-├── client/                 # Angular 21 Frontend
-│   ├── src/
-│   │   ├── app/            # Components (Menu, Cart, Profile)
-│   │   └── assets/         # Images and styles
-│   ├── angular.json        # Angular CLI config
-│   └── package.json        # Client dependencies
-│
-├── server/                 # Node.js + Express Backend
-│   ├── src/
-│   │   ├── config/         # DB Connection
-│   │   ├── controllers/    # Request Handlers (Auth, Order)
-│   │   ├── middleware/     # Auth & Validation
-│   │   ├── models/         # Mongoose Schemas (User, Food)
-│   │   ├── routes/         # API Routes
-│   │   └── utils/          # Logic Helpers (Tax, Roles)
-│   ├── package.json        # Server dependencies
-│   └── tsconfig.json       # TypeScript Config
-│
-└── README.md               # Documentation
-```
+This project is built using a robust TypeScript environment. Follow these steps to set up the backend:
 
----
+1.  **Initialization**:
+    ```bash
+    npm init -y
+    ```
 
-## 📸 Visual Gallery
+2.  **Dependencies**:
+    Install the necessary packages and dev-dependencies:
+    ```bash
+    npm install express mongoose dotenv cors helmet morgan
+    npm install --save-dev typescript @types/node @types/express @types/cors @types/morgan ts-node nodemon
+    ```
 
-| Profile UI | Menu UI | Cart UI |
-| :---: | :---: | :---: |
-| ![Profile](https://via.placeholder.com/300x500?text=Profile+UI) | ![Menu](https://via.placeholder.com/300x500?text=Menu+UI) | ![Cart](https://via.placeholder.com/300x500?text=Cart+UI) |
-| *Wallet & History* | *Food Selection* | *Group Ordering* |
+3.  **TypeScript Configuration**:
+    Generate `tsconfig.json`:
+    ```bash
+    npx tsc --init
+    ```
+    Ensure your `tsconfig.json` targets ES2020 or later and has `outDir` set to `./dist`.
 
----
-
-## 🚀 Key Features Explained
-
-### 1. Login & Signup (Identity)
-*   **Role Detection**: The system automatically detects if a user is a **Hosteller** or **Day Scholar**.
-    *   If the **Registration Number** contains 'H' (e.g., `123H456`) or the **Email** contains 'hostel', the user is assigned the 'Hosteller' role.
-*   **Security**: Passwords are hashed using `bcrypt`, and sessions are managed via JWT (JSON Web Tokens).
-
-### 2. Profile
-*   **Digital Wallet**: Every user starts with a **₹3,000** wallet balance for testing.
-*   **Stats**: View total spent, total orders, and saved food combos.
-*   **History**: Access past order details.
-
-### 3. Menu
-*   **Live Availability**: Browse food items with real-time stock status.
-*   **Filtering**: (Planned) Filter by category or dietary preference.
-
-### 4. Cart (Collaborative)
-*   **Shared Cart**: Generate a unique link to invite friends.
-*   **Real-time Joining**: Friends can join the session (securely validated via ObjectId checks) and add items to the same cart.
-*   **Split Bill**: Options to split the bill equally or individually.
-
-### 5. Order & Timer
-*   **Tax Calculation**: Orders automatically include a **5% tax**, calculated with strict integer precision to avoid floating-point errors (e.g., `₹10.50` + tax becomes `₹11.03`).
-*   **Cooking Timer**: Once an order is placed, a **15-minute countdown** begins, tracked from the server's `cookingStartTime`.
+4.  **Scripts**:
+    Add the following to your `package.json` scripts:
+    ```json
+    "scripts": {
+      "start": "node dist/server.js",
+      "dev": "nodemon --exec ts-node src/server.ts",
+      "build": "tsc"
+    }
+    ```
 
 ---
 
-## 💻 Installation Guide
+### 📂 Folder Structure Breakdown
 
-Follow these steps to run the full stack locally.
+The project follows a standard MEAN stack architecture with a clear separation of concerns.
 
-### Prerequisites
-*   Node.js (v18+)
-*   MongoDB (Local or Atlas URL)
+#### **Frontend**
+The frontend is divided into two distinct Angular applications:
+*   **`client-user/` (Student Portal)**: The main interface for students to browse menus, add items to cart, and track orders. (Default Port: 4200)
+*   **`client-admin/` (Staff Portal)**: The administrative dashboard for canteen staff to manage menu items, view active orders, and update order statuses. (Port: 4201)
 
-### 🟢 Backend (Server) Setup
+#### **Backend**
+The `server/src/` directory is organized using the MVC pattern:
+*   **`controllers/`**: Handles incoming requests and business logic (e.g., `orderController.ts`, `authController.ts`).
+*   **`models/`**: Mongoose schemas and interfaces defining data structure (e.g., `User.ts`, `Food.ts`).
+*   **`routes/`**: Express route definitions mapping URLs to controllers.
+*   **`middleware/`**: Custom middleware for authentication (`auth.ts`) and error handling.
+*   **`utils/`**: Helper functions for logic (`logicHelpers.ts`) and formatting.
+*   **`seed/`**: Database seeding scripts for initial data.
 
-1.  Navigate to the server folder:
+---
+
+### 📡 Master API Table
+
+| Category | Method | Endpoint | Access | Body / Params | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Auth** | POST | `/api/auth/register` | Public | `{ name, email, registrationNumber, password, ... }` | Create student account |
+| **Auth** | POST | `/api/auth/login` | Public | `{ identifier, password }` | Get JWT Token |
+| **Food** | GET | `/api/food` | Public | - | List all items |
+| **Cart** | POST | `/api/cart/add` | User | `{ foodId, quantity }` | Add item to cart |
+| **Orders** | POST | `/api/orders` | User | `{ paymentMethod, items }` | Place order (Wallet/UPI) |
+| **Admin** | POST | `/api/admin/users/:id/add-wallet` | Admin | `{ amount }` | Top up student wallet |
+
+---
+
+### 🚀 Running the Project
+
+1.  **Seed the Database**:
+    Populate the database with initial food items and dummy users.
     ```bash
     cd server
-    ```
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-3.  Seed the database (adds sample food items):
-    ```bash
     npm run seed
     ```
-4.  Start the development server:
+
+2.  **Start Backend (Dev Mode)**:
+    Runs the Express server with Nodemon for hot-reloading.
     ```bash
+    cd server
     npm run dev
     ```
-    *The server runs on `http://localhost:5000`*
 
-### 🔵 Frontend (Client) Setup
-
-1.  Open a new terminal and navigate to the client folder:
+3.  **Start Frontend (User Portal)**:
+    Launches the student application.
     ```bash
-    cd client
-    ```
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-3.  Start the Angular application:
-    ```bash
+    cd client-user
     npm start
     ```
-    *(Or `ng serve` if you have Angular CLI global)*
 
-    *The client runs on `http://localhost:4200`*
+4.  **Start Frontend (Admin Portal)**:
+    Launches the admin application.
+    ```bash
+    cd client-admin
+    npm start
+    ```
 
 ---
-
-## 📚 API Quick Reference
-
-| Endpoint | Method | Function | Inputs (Body/Params) | TS Interface |
-| :--- | :--- | :--- | :--- | :--- |
-| `/api/auth/register` | POST | Create Account | `name`, `email`, `registrationNumber`, `password` | `IUser` |
-| `/api/auth/login` | POST | Login | `identifier` (Email/RegNo), `password` | `AuthRequest` |
-| `/api/food` | GET | Get Menu | - | `IFood[]` |
-| `/api/cart/add` | POST | Add to Cart | `foodId`, `quantity`, `specialInstructions` | `ICartItem` |
-| `/api/cart/shared` | POST | Create shared link | - | `ICart` |
-| `/api/cart/join/:link`| POST | Join shared cart | `sharedLink` (param) | `ICart` |
-| `/api/orders` | POST | Place Order | `paymentMethod` | `IOrder` |
+<div align="center">
+  <sub>Built with ❤️ by Bolt</sub>
+</div>
