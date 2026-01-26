@@ -114,11 +114,12 @@ const orderSchema = new Schema<IOrder>(
     }
 );
 
-// Generate orderId before saving
-orderSchema.pre('save', async function (next) {
+// Generate orderId before validation
+orderSchema.pre('validate', async function (next) {
     if (!this.orderId) {
         // Generate unique order ID: ORD-XXXX
-        const count = await mongoose.model('Order').countDocuments();
+        const OrderModel = this.constructor as mongoose.Model<IOrder>;
+        const count = await OrderModel.countDocuments();
         this.orderId = `#ORD-${(count + 1).toString().padStart(4, '0')}`;
     }
     next();

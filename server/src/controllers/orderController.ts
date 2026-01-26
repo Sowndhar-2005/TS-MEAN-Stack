@@ -10,18 +10,59 @@ import { calculateOrderTotal } from '../utils/logicHelpers';
 // Place order
 export const placeOrder = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { paymentMethod } = req.body;
+        const { paymentMethod, items: directItems } = req.body;
+        let orderItems: any[] = [];
+        let rawSubtotal = 0;
 
-        // Get user's cart
-        const cart = await Cart.findOne({ userId: req.user._id }).populate('items.foodId');
+        if (directItems && Array.isArray(directItems) && directItems.length > 0) {
+            // Direct Order (items provided in body)
+            for (const item of directItems) {
+                const food = await Food.findById(item.foodId || item.food?._id);
+                if (!food) {
+                    res.status(404).json({ error: `Food item not found: ${item.foodId}` });
+                    return;
+                }
+                orderItems.push({
+                    foodId: food._id,
+                    name: food.name,
+                    quantity: item.quantity,
+                    price: food.price,
+                    specialInstructions: item.specialInstructions,
+                });
+                rawSubtotal += food.price * item.quantity;
+            }
 
-        if (!cart || cart.items.length === 0) {
-            res.status(400).json({ error: 'Cart is empty' });
-            return;
+            // Optional: Remove these items from cart if they exist there
+            const cart = await Cart.findOne({ userId: req.user._id });
+            if (cart) {
+                const orderedFoodIds = orderItems.map(oi => oi.foodId.toString());
+                cart.items = cart.items.filter(item => !orderedFoodIds.includes(item.foodId.toString()));
+                await cart.save();
+            }
+        } else {
+            // Cart-based Order
+            const cart = await Cart.findOne({ userId: req.user._id }).populate('items.foodId');
+
+            if (!cart || cart.items.length === 0) {
+                res.status(400).json({ error: 'Cart is empty' });
+                return;
+            }
+
+            orderItems = cart.items.map((item: any) => ({
+                foodId: item.foodId._id,
+                name: item.foodId.name,
+                quantity: item.quantity,
+                price: item.price,
+                specialInstructions: item.specialInstructions,
+            }));
+            rawSubtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+            // Clear cart after placing order
+            cart.items = [];
+            await cart.save();
         }
 
         // Calculate totals
-        const rawSubtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
         const { subtotal, tax, totalAmount } = calculateOrderTotal(rawSubtotal);
 
         // Get user
@@ -47,13 +88,7 @@ export const placeOrder = async (req: AuthRequest, res: Response): Promise<void>
         // Create order
         const order = new Order({
             userId: req.user._id,
-            items: cart.items.map((item: any) => ({
-                foodId: item.foodId._id,
-                name: item.foodId.name,
-                quantity: item.quantity,
-                price: item.price,
-                specialInstructions: item.specialInstructions,
-            })),
+            items: orderItems,
             subtotal,
             tax,
             totalAmount,
@@ -95,9 +130,8 @@ export const placeOrder = async (req: AuthRequest, res: Response): Promise<void>
         await transaction.save();
 
         // Update food stock
-        for (const item of cart.items) {
-            const food: any = item.foodId;
-            await Food.findByIdAndUpdate(food._id, {
+        for (const item of orderItems) {
+            await Food.findByIdAndUpdate(item.foodId, {
                 $inc: { stockQuantity: -item.quantity },
             });
         }
@@ -107,15 +141,13 @@ export const placeOrder = async (req: AuthRequest, res: Response): Promise<void>
         order.paymentStatus = 'completed';
         await order.save();
 
-        // Clear cart
-        cart.items = [];
-        await cart.save();
-
         res.status(201).json({
             message: 'Order placed successfully',
             order,
             remainingBalance:
-                paymentMethod === 'wallet' ? user.walletBalance : user.collegePoints,
+                paymentMethod === 'wallet'
+                    ? (user.walletBalance - totalAmount)
+                    : (paymentMethod === 'collegePoints' ? (user.collegePoints - totalAmount) : 0),
         });
     } catch (error: any) {
         console.error('Place order error:', error);

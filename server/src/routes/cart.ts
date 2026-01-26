@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
     getCart,
     addToCart,
+    updateCartGroup,
     updateCartItem,
     removeFromCart,
     clearCart,
@@ -17,6 +18,7 @@ router.use(authMiddleware);
 
 router.get('/', getCart);
 router.post('/add', addToCart);
+router.put('/group', updateCartGroup);
 router.put('/item/:itemId', updateCartItem);
 router.delete('/item/:itemId', removeFromCart);
 router.delete('/clear', clearCart);

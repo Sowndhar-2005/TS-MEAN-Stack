@@ -1,9 +1,11 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ICartItem {
+    _id?: mongoose.Types.ObjectId;
     foodId: mongoose.Types.ObjectId;
     quantity: number;
     specialInstructions?: string;
+    customGroup?: string;
     price: number;
 }
 
@@ -44,6 +46,10 @@ const cartSchema = new Schema<ICart>(
                 specialInstructions: {
                     type: String,
                     trim: true,
+                },
+                customGroup: {
+                    type: String,
+                    default: null,
                 },
                 price: {
                     type: Number,

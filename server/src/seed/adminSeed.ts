@@ -19,7 +19,6 @@ const seedAdmin = async () => {
         await mongoose.connect(MONGODB_URI);
         console.log('✅ Connected to MongoDB');
 
-        // Delete existing admins to ensure clean state
         await User.deleteMany({ isAdmin: true });
         console.log('🗑️  Deleted existing admin users');
 
