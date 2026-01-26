@@ -2,10 +2,10 @@
 
 <div align="center">
 
-<img src="https://img.shields.io/badge/Angular_21-DD0031?style=for-the-badge&logo=angular&logoColor=white" />
-<img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" />
-<img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
-<img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" />
+<img width="48" height="48" src="https://img.icons8.com/color/48/mongodb.png" alt="mongodb"/>
+<img width="50" height="50" src="https://img.icons8.com/ios/50/express-js.png" alt="express-js"/>
+<img width="48" height="48" src="https://img.icons8.com/color/48/angularjs.png" alt="angularjs"/>
+<img width="48" height="48" src="https://img.icons8.com/fluency/48/node-js.png" alt="node-js"/> 
 
 <p><strong>A high-performance, type-safe Campus Canteen Food Hub built with the modern MEAN stack.</strong></p>
 
