@@ -159,10 +159,10 @@ Follow these steps to run the full stack locally.
 
 | Endpoint | Method | Function | Inputs (Body/Params) | TS Interface |
 | :--- | :--- | :--- | :--- | :--- |
-| `/api/auth/register` | POST | Create Account | `name`, `email`, `registrationNumber`, `password` | `IUser` |
-| `/api/auth/login` | POST | Login | `identifier` (Email/RegNo), `password` | `AuthRequest` |
-| `/api/food` | GET | Get Menu | - | `IFood[]` |
-| `/api/cart/add` | POST | Add to Cart | `foodId`, `quantity`, `specialInstructions` | `ICartItem` |
-| `/api/cart/shared` | POST | Create shared link | - | `ICart` |
-| `/api/cart/join/:link`| POST | Join shared cart | `sharedLink` (param) | `ICart` |
-| `/api/orders` | POST | Place Order | `paymentMethod` | `IOrder` |
+| `/api/v1/auth/register` | POST | Create Account | `name`, `email`, `registrationNumber`, `password` | `IUser` |
+| `/api/v1/auth/login` | POST | Login | `identifier` (Email/RegNo), `password` | `AuthRequest` |
+| `/api/v1/food` | GET | Get Menu | - | `IFood[]` |
+| `/api/v1/cart/add` | POST | Add to Cart | `foodId`, `quantity`, `specialInstructions` | `ICartItem` |
+| `/api/v1/cart/shared` | POST | Create shared link | - | `ICart` |
+| `/api/v1/cart/join/:link`| POST | Join shared cart | `sharedLink` (param) | `ICart` |
+| `/api/v1/orders` | POST | Place Order | `paymentMethod` | `IOrder` |
