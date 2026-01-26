@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { Cart } from '../models/Cart';
 import { Food } from '../models/Food';
 import { AuthRequest } from '../middleware/auth';
+import { isUserInSharedCart } from '../utils/logicHelpers';
 import crypto from 'crypto';
 
 // Get user's cart
@@ -221,7 +222,7 @@ export const joinSharedCart = async (req: AuthRequest, res: Response): Promise<v
         }
 
         // Add user to shared cart participants
-        if (!cart.sharedWith.includes(req.user._id)) {
+        if (!isUserInSharedCart(cart.sharedWith, req.user._id)) {
             cart.sharedWith.push(req.user._id);
             await cart.save();
         }

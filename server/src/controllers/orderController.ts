@@ -5,8 +5,7 @@ import { User } from '../models/User';
 import { Food } from '../models/Food';
 import { Transaction } from '../models/Transaction';
 import { AuthRequest } from '../middleware/auth';
-
-const TAX_RATE = 0.05; // 5% tax
+import { calculateOrderTotal } from '../utils/logicHelpers';
 
 // Place order
 export const placeOrder = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -22,9 +21,8 @@ export const placeOrder = async (req: AuthRequest, res: Response): Promise<void>
         }
 
         // Calculate totals
-        const subtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        const tax = subtotal * TAX_RATE;
-        const totalAmount = subtotal + tax;
+        const rawSubtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const { subtotal, tax, totalAmount } = calculateOrderTotal(rawSubtotal);
 
         // Get user
         const user = await User.findById(req.user._id);
