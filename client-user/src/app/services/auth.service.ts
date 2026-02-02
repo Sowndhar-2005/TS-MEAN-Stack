@@ -62,8 +62,8 @@ export class AuthService {
     );
   }
 
-  login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, password }).pipe(
+  login(email: string, registrationNumber: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, registrationNumber }).pipe(
       tap((response) => this.handleAuthSuccess(response))
     );
   }

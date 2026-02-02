@@ -1,5 +1,4 @@
 import { Response } from 'express';
-import mongoose from 'mongoose';
 import { Order } from '../models/Order';
 import { Cart } from '../models/Cart';
 import { User } from '../models/User';

@@ -32,12 +32,12 @@ export class FoodService {
   categoryCounts = computed(() => {
     const counts: { [key: string]: number } = {};
     const foodsArray = this.allFoods(); // Use allFoods for counts
-    
+
     // Ensure we have an array
     if (!Array.isArray(foodsArray)) {
       return counts;
     }
-    
+
     foodsArray.forEach(food => {
       if (food && food.category) {
         counts[food.category] = (counts[food.category] || 0) + 1;
@@ -46,7 +46,7 @@ export class FoodService {
     return counts;
   });
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // Get all foods
   getAllFoods(): void {
@@ -56,7 +56,6 @@ export class FoodService {
         const foodsData = Array.isArray(response) ? response : (response.data || response.foods || []);
         this.foods.set(foodsData);
         this.allFoods.set(foodsData); // Update cache for counts
-        console.log('Loaded foods:', foodsData);
       },
       error: (error) => {
         console.error('Error loading foods:', error);
@@ -70,12 +69,10 @@ export class FoodService {
   loadFoodsByCategory(category: string): void {
     // Use query parameter instead of path parameter
     const url = `${this.apiUrl}?category=${category}`;
-    console.log('Loading category:', category, 'URL:', url);
-    
+
     this.http.get<any>(url).subscribe({
       next: (response) => {
         const foodsData = Array.isArray(response) ? response : (response.data || response.foods || []);
-        console.log('Category foods loaded:', foodsData.length, 'items');
         this.foods.set(foodsData);
       },
       error: (error) => {

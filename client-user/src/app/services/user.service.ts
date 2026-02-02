@@ -62,8 +62,8 @@ export class UserService {
     );
   }
 
-  register(data: any) {
-    return this.http.post<any>('/api/auth/register', data).pipe(
+  adminLogin(credentials: any) {
+    return this.http.post<any>('/api/auth/admin-login', credentials).pipe(
       tap(response => {
         this.setSession(response);
       })
@@ -71,12 +71,30 @@ export class UserService {
   }
 
   logout(navigate: boolean = true) {
+    const userId = this.currentUser()?.id;
+
+    // Clear user data
     this.currentUser.set(null);
     this.walletBalance.set(0);
     this.totalSpent.set(0);
     this.totalOrders.set(0);
+
+    // Clear auth tokens
     localStorage.removeItem('token');
     localStorage.removeItem('isAdmin');
+
+    // Clear user-specific localStorage data
+    if (userId) {
+      localStorage.removeItem(`temp_order_items_${userId}`);
+    }
+
+    // Clear all localStorage with temp_order_items prefix (fallback)
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('temp_order_items_')) {
+        localStorage.removeItem(key);
+      }
+    });
+
     if (navigate) {
       this.router.navigate(['/login']);
     }

@@ -63,6 +63,10 @@ export class AdminService {
     private http = inject(HttpClient);
     private apiUrl = '/api/admin';
 
+    createUser(userData: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/users`, userData);
+    }
+
     // Signals
     users = signal<AdminUser[]>([]);
     dashboardStats = signal<DashboardStats | null>(null);
@@ -127,10 +131,8 @@ export class AdminService {
         });
     }
 
-    // Password Management
-    resetUserPassword(userId: string, newPassword: string): Observable<PasswordResetResponse> {
-        return this.http.post<PasswordResetResponse>(`${this.apiUrl}/users/${userId}/reset-password`, {
-            newPassword,
-        });
+    // User Management
+    deleteUser(userId: string): Observable<{ message: string }> {
+        return this.http.delete<{ message: string }>(`${this.apiUrl}/users/${userId}`);
     }
 }

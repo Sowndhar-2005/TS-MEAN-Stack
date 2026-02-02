@@ -8,7 +8,8 @@ import {
     getDashboardStats,
     addWalletBalance,
     reduceWalletBalance,
-    resetUserPassword
+    createUser,
+    deleteUser
 } from '../controllers/adminController';
 import { authMiddleware } from '../middleware/auth';
 import { adminMiddleware } from '../middleware/adminAuth';
@@ -25,7 +26,9 @@ router.get('/dashboard', getDashboardStats);
 // User management
 router.get('/users', getAllUsers);
 router.get('/users/search', searchUsers);
+router.post('/users', createUser);
 router.get('/users/:userId', getUserById);
+router.delete('/users/:userId', deleteUser);
 
 // Points management
 router.post('/users/:userId/add-points', addPointsToUser);
@@ -34,8 +37,5 @@ router.post('/users/:userId/deduct-points', deductPointsFromUser);
 // Wallet management
 router.post('/users/:userId/add-wallet', addWalletBalance);
 router.post('/users/:userId/reduce-wallet', reduceWalletBalance);
-
-// Password management
-router.post('/users/:userId/reset-password', resetUserPassword);
 
 export default router;

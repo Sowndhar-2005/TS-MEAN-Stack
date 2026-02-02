@@ -1,16 +1,35 @@
 /* Menu Page - Optimized Layout */
 
-/* HIDE SCROLLBAR (yellow marked area) */
+/* HIDE SCROLLBAR - COMPLETE */
 *::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 * {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Ensure scrollbar is hidden on main content area */
+.col-lg-10,
+.col-lg-9,
+.container-fluid {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.col-lg-10::-webkit-scrollbar,
+.col-lg-9::-webkit-scrollbar,
+.container-fluid::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Smooth scrolling for food grid */
+.col-lg-10,
 .col-lg-9 {
   scroll-behavior: smooth;
 }
@@ -36,17 +55,17 @@
   background-position: center !important;
   background-repeat: no-repeat !important;
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  
+
   /* Hardware acceleration */
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   -webkit-font-smoothing: subpixel-antialiased;
-  
+
   /* Better image rendering - REMOVED crisp-edges that causes pixelation */
   image-rendering: auto;
   image-rendering: -webkit-optimize-contrast;
-  
+
   /* Force GPU rendering for crisp images */
   transform: translateZ(0) scale(1);
   -webkit-transform: translateZ(0) scale(1);
@@ -127,13 +146,19 @@
   margin-bottom: 0.5rem !important;
 }
 
-/* Optimize food grid */
-.row.row-cols-1.row-cols-md-2.row-cols-lg-3 {
-  margin-right: -0.5rem;
-  margin-left: -0.5rem;
+/* Optimize food grid - Reduced gap for better visibility */
+.row.row-cols-1.row-cols-md-2.row-cols-xl-3 {
+  margin-right: -0.375rem;
+  margin-left: -0.375rem;
 }
 
-.row.row-cols-1.row-cols-md-2.row-cols-lg-3 > .col {
-  padding-right: 0.5rem;
-  padding-left: 0.5rem;
+.row.row-cols-1.row-cols-md-2.row-cols-xl-3 > .col {
+  padding-right: 0.375rem;
+  padding-left: 0.375rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Ensure cards are fully visible */
+.col-lg-10 .row {
+  padding-bottom: 2rem !important;
 }

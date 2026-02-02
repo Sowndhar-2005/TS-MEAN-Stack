@@ -178,10 +178,17 @@
                 @if (activeTab() === 'users') {
                     
                     <!-- Filters -->
-                    <div class="d-flex gap-2 mb-4">
-                        <button (click)="onFilterChange('all')" [class.bg-dark]="filterType() === 'all'" [class.text-white]="filterType() === 'all'" class="btn btn-light rounded-pill px-4 fw-bold">All</button>
-                        <button (click)="onFilterChange('dayscholar')" [class.bg-warning]="filterType() === 'dayscholar'" [class.text-dark]="filterType() === 'dayscholar'" class="btn btn-light rounded-pill px-4 fw-bold">Day Scholars</button>
-                        <button (click)="onFilterChange('hosteller')" [class.bg-secondary]="filterType() === 'hosteller'" [class.text-white]="filterType() === 'hosteller'" class="btn btn-light rounded-pill px-4 fw-bold">Hostellers</button>
+                    <!-- Filters & Actions -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex gap-2">
+                            <button (click)="onFilterChange('all')" [class.bg-dark]="filterType() === 'all'" [class.text-white]="filterType() === 'all'" class="btn btn-light rounded-pill px-4 fw-bold">All</button>
+                            <button (click)="onFilterChange('dayscholar')" [class.bg-warning]="filterType() === 'dayscholar'" [class.text-dark]="filterType() === 'dayscholar'" class="btn btn-light rounded-pill px-4 fw-bold">Day Scholars</button>
+                            <button (click)="onFilterChange('hosteller')" [class.bg-secondary]="filterType() === 'hosteller'" [class.text-white]="filterType() === 'hosteller'" class="btn btn-light rounded-pill px-4 fw-bold">Hostellers</button>
+                        </div>
+                        
+                        <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" (click)="openCreateUserModal()">
+                            <i class="bi bi-person-plus-fill me-2"></i> Add User
+                        </button>
                     </div>
 
                     @if (loading()) {
@@ -227,8 +234,11 @@
                                                 <button (click)="quickAddWallet(user, $event)" class="btn btn-success flex-grow-1 rounded-3 py-2 fw-bold text-white shadow-sm">
                                                     <i class="bi bi-plus-lg"></i> Add
                                                 </button>
-                                                <button (click)="quickReduceWallet(user, $event)" [disabled]="user.walletBalance === 0" class="btn btn-danger flex-grow-1 rounded-3 py-2 fw-bold text-white shadow-sm">
+                                                <button (click)="quickReduceWallet(user, $event)" [disabled]="user.walletBalance === 0" class="btn btn-warning flex-grow-1 rounded-3 py-2 fw-bold text-white shadow-sm">
                                                     <i class="bi bi-dash"></i> Reduce
+                                                </button>
+                                                <button (click)="deleteUser(user, $event)" class="btn btn-danger rounded-3 py-2 px-3 fw-bold text-white shadow-sm" title="Delete User">
+                                                    <i class="bi bi-trash-fill"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -282,12 +292,6 @@
                      <button class="btn btn-outline-danger flex-grow-1 rounded-pill" (click)="openReduceWalletModal(selectedDetailUser()!)">Reduce</button>
                  </div>
              </div>
-
-             <div class="d-grid gap-2">
-                 <button class="btn btn-light text-muted fw-bold rounded-3" (click)="openPasswordModal(selectedDetailUser()!)">
-                     <i class="bi bi-key-fill me-2"></i> Reset Password
-                 </button>
-             </div>
           </div>
         </div>
       </div>
@@ -329,23 +333,52 @@
     </div>
 }
 
-<!-- Password Modal -->
-@if (showPasswordModal()) {
+<!-- Create User Modal -->
+@if (showCreateUserModal()) {
     <div class="modal-backdrop fade show"></div>
     <div class="modal fade show d-block" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg">
-          <div class="modal-header border-0">
-            <h5 class="modal-title fw-bold">Reset Password</h5>
-            <button type="button" class="btn-close" (click)="closePasswordModal()"></button>
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold">Add New User</h5>
+            <button type="button" class="btn-close" (click)="closeCreateUserModal()"></button>
           </div>
-          <div class="modal-body pt-0">
+          <div class="modal-body">
              <div class="mb-3">
-                 <input type="text" class="form-control bg-light border-0 mb-2" placeholder="New Password" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)">
-                 <input type="text" class="form-control bg-light border-0" placeholder="Confirm Password" [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)">
+                 <label class="form-label small fw-bold text-muted">Full Name</label>
+                 <input type="text" class="form-control bg-light border-0" [ngModel]="newUser().name" (ngModelChange)="newUser.set({...newUser(), name: $event})" placeholder="e.g. John Doe">
              </div>
-             <button class="btn btn-dark w-100 rounded-pill fw-bold" (click)="submitPasswordReset()" [disabled]="processingPassword()">
-                 Update Password
+             <div class="mb-3">
+                 <label class="form-label small fw-bold text-muted">College Email</label>
+                 <input type="email" class="form-control bg-light border-0" [ngModel]="newUser().email" (ngModelChange)="newUser.set({...newUser(), email: $event})" placeholder="student@college.edu">
+             </div>
+             <div class="mb-3">
+                 <label class="form-label small fw-bold text-muted">Registration Number</label>
+                 <input type="text" class="form-control bg-light border-0 text-uppercase" [ngModel]="newUser().registrationNumber" (ngModelChange)="newUser.set({...newUser(), registrationNumber: $event})" placeholder="e.g. 21CSR001">
+             </div>
+             <div class="row g-3 mb-4">
+                 <div class="col-6">
+                     <label class="form-label small fw-bold text-muted">Department</label>
+                     <input type="text" class="form-control bg-light border-0" [ngModel]="newUser().department" (ngModelChange)="newUser.set({...newUser(), department: $event})" placeholder="e.g. CSE">
+                 </div>
+                 <div class="col-6">
+                     <label class="form-label small fw-bold text-muted">Year</label>
+                     <input type="number" class="form-control bg-light border-0" [ngModel]="newUser().year" (ngModelChange)="newUser.set({...newUser(), year: +$event})" placeholder="e.g. 3">
+                 </div>
+             </div>
+             <div class="mb-4">
+                 <label class="form-label small fw-bold text-muted d-block">User Type</label>
+                 <div class="btn-group w-100" role="group">
+                     <input type="radio" class="btn-check" name="userType" id="dayScholar" [checked]="newUser().userType === 'dayscholar'" (change)="newUser.set({...newUser(), userType: 'dayscholar'})">
+                     <label class="btn btn-outline-warning fw-bold" for="dayScholar">Day Scholar</label>
+
+                     <input type="radio" class="btn-check" name="userType" id="hosteller" [checked]="newUser().userType === 'hosteller'" (change)="newUser.set({...newUser(), userType: 'hosteller'})">
+                     <label class="btn btn-outline-secondary fw-bold" for="hosteller">Hosteller</label>
+                 </div>
+             </div>
+
+             <button class="btn btn-primary w-100 rounded-pill fw-bold py-3" (click)="submitCreateUser()" [disabled]="creatingUser()">
+                 {{ creatingUser() ? 'Creating User...' : 'Create User' }}
              </button>
           </div>
         </div>
