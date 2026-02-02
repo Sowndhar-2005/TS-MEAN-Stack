@@ -1,19 +1,12 @@
 import { Response } from 'express';
 import { User } from '../models/User';
 import { AuthRequest } from '../middleware/auth';
+import { detectUserType } from '../utils/logicHelpers';
 
 // Get all users (admin only)
 export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const users = await User.find({ isAdmin: false }).select('-password').sort({ createdAt: -1 });
-
-        // DEBUG: Check values from DB
-        console.log('[DEBUG] First 3 users stats:', users.slice(0, 3).map(u => ({
-            name: u.name,
-            reg: u.registrationNumber,
-            orders: u.totalOrders,
-            spent: u.totalSpent
-        })));
 
         res.json({
             message: 'Users retrieved successfully',
@@ -367,5 +360,98 @@ export const resetUserPassword = async (req: AuthRequest, res: Response): Promis
     } catch (error: any) {
         console.error('Reset password error:', error);
         res.status(500).json({ error: 'Failed to reset password' });
+    }
+};
+
+// Create a new user (admin only)
+export const createUser = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { email, registrationNumber, name, department, year, userType } = req.body;
+
+        if (!email || !registrationNumber || !name) {
+            res.status(400).json({ error: 'Please provide Email, Registration Number and Name' });
+            return;
+        }
+
+        const cleanEmail = email.toLowerCase().trim();
+        const cleanRegNo = registrationNumber.toUpperCase().trim();
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ $or: [{ email: cleanEmail }, { registrationNumber: cleanRegNo }] });
+        if (existingUser) {
+            res.status(400).json({ error: 'User with this Email or Registration Number already exists' });
+            return;
+        }
+
+        // Detect user type if not provided
+        const finalUserType = userType || detectUserType(cleanEmail, cleanRegNo);
+
+        const user = new User({
+            name,
+            email: cleanEmail,
+            registrationNumber: cleanRegNo,
+            password: cleanRegNo, // Default password = RegNo
+            userType: finalUserType,
+            department: department || '',
+            year: year || null,
+            walletBalance: 3000 // Default balance
+        });
+
+        await user.save();
+
+        console.log(`[ADMIN] Created user: ${user.name} (${user.registrationNumber})`);
+
+        res.status(201).json({
+            message: 'User created successfully',
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                registrationNumber: user.registrationNumber,
+                userType: user.userType,
+                walletBalance: user.walletBalance
+            }
+        });
+
+    } catch (error: any) {
+        console.error('Create user error:', error);
+        res.status(500).json({ error: 'Failed to create user', details: error.message });
+    }
+};
+
+// Delete user (admin only)
+export const deleteUser = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { userId } = req.params;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+
+        // Prevent deleting admin users
+        if (user.isAdmin) {
+            res.status(403).json({ error: 'Cannot delete admin users' });
+            return;
+        }
+
+        await User.findByIdAndDelete(userId);
+
+        console.log(`[ADMIN] Deleted user: ${user.name} (${user.registrationNumber})`);
+
+        res.json({
+            message: 'User deleted successfully',
+            deletedUser: {
+                id: user._id,
+                name: user.name,
+                registrationNumber: user.registrationNumber
+            }
+        });
+
+    } catch (error: any) {
+        console.error('Delete user error:', error);
+        res.status(500).json({ error: 'Failed to delete user', details: error.message });
     }
 };

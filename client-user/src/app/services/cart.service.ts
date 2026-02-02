@@ -32,6 +32,12 @@ export class CartService {
     this.fetchCart();
   }
 
+  // Refresh cart when user changes
+  refreshUserData() {
+    this.cartItems.set([]);
+    this.fetchCart();
+  }
+
   // Fetch cart from DB
   fetchCart() {
     this.http.get<CartResponse>(this.apiUrl).subscribe({
@@ -147,7 +153,6 @@ export class CartService {
         price: item.price
       }));
 
-    console.log('Cart updated with', items.length, 'items');
     this.cartItems.set(items);
   }
 }

@@ -36,7 +36,7 @@
 
       <div class="d-flex align-items-center gap-3">
         <!-- Cart Button -->
-        <a routerLink="/cart" class="btn btn-light position-relative rounded-3 d-flex align-items-center gap-2 text-decoration-none">
+        <a routerLink="/cart" class="btn btn-light position-relative rounded-3 d-flex align-items-center gap-2 text-decoration-none" [attr.aria-label]="'Shopping cart with ' + cartItemCount() + ' items'">
           <i class="bi bi-cart3 fs-5"></i>
           <span class="d-none d-sm-inline fw-bold small text-dark">Cart</span>
           @if (cartItemCount() > 0) {

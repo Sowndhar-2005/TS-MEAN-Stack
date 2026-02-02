@@ -62,8 +62,8 @@ export class UserService {
     );
   }
 
-  register(data: any) {
-    return this.http.post<any>('/api/auth/register', data).pipe(
+  adminLogin(credentials: any) {
+    return this.http.post<any>('/api/auth/admin-login', credentials).pipe(
       tap(response => {
         this.setSession(response);
       })

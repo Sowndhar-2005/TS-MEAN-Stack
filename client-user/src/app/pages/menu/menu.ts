@@ -1,5 +1,5 @@
 import { Component, signal, computed, OnInit, inject, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TopNavbar } from '../../shared/top-navbar/top-navbar';
@@ -10,7 +10,7 @@ import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-menu',
-  imports: [CommonModule, FormsModule, TopNavbar],
+  imports: [CommonModule, FormsModule, TopNavbar, NgOptimizedImage],
   templateUrl: './menu.html',
   styleUrl: './menu.css',
 })

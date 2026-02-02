@@ -38,7 +38,7 @@ export class AdminLogin {
 
         this.isLoading.set(true);
 
-        this.userService.login(this.loginForm.value).subscribe({
+        this.userService.adminLogin(this.loginForm.value).subscribe({
             next: (response) => {
                 if (response.user?.isAdmin) {
                     this.router.navigate(['/admin']);

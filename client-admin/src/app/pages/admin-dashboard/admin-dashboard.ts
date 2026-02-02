@@ -40,14 +40,6 @@ export class AdminDashboard implements OnInit {
   isAddingWallet = signal<boolean>(true);
   processingWallet = signal<boolean>(false);
 
-  // Password Reset Modal state
-  showPasswordModal = signal<boolean>(false);
-  newPassword = signal<string>('');
-  confirmPassword = signal<string>('');
-  processingPassword = signal<boolean>(false);
-  showNewPassword = signal<boolean>(false);
-  showConfirmPassword = signal<boolean>(false);
-
   // Toast state
   toastMessage = signal<string>('');
   toastType = signal<'success' | 'error'>('success');
@@ -58,6 +50,18 @@ export class AdminDashboard implements OnInit {
 
   // Filter state
   filterType = signal<'all' | 'dayscholar' | 'hosteller'>('all');
+
+  // Create User Modal state
+  showCreateUserModal = signal<boolean>(false);
+  newUser = signal<{ name: string, email: string, registrationNumber: string, userType: 'dayscholar' | 'hosteller', department?: string, year?: number }>({
+    name: '',
+    email: '',
+    registrationNumber: '',
+    userType: 'dayscholar',
+    department: '',
+    year: undefined
+  });
+  creatingUser = signal<boolean>(false);
 
   // Polling subscription
   private pollSubscription: any;
@@ -260,58 +264,25 @@ export class AdminDashboard implements OnInit {
     });
   }
 
-  // Password Modal functions
-  openPasswordModal(user: AdminUser): void {
-    this.selectedUser.set(user);
-    this.newPassword.set('');
-    this.confirmPassword.set('');
-    this.showNewPassword.set(false);
-    this.showConfirmPassword.set(false);
-    this.showPasswordModal.set(true);
-  }
+  // Delete User
+  deleteUser(user: AdminUser, event: Event): void {
+    event.stopPropagation();
 
-  closePasswordModal(): void {
-    this.showPasswordModal.set(false);
-    this.newPassword.set('');
-    this.confirmPassword.set('');
-  }
-
-  togglePasswordVisibility(field: 'new' | 'confirm'): void {
-    if (field === 'new') {
-      this.showNewPassword.set(!this.showNewPassword());
-    } else {
-      this.showConfirmPassword.set(!this.showConfirmPassword());
-    }
-  }
-
-  submitPasswordReset(): void {
-    const user = this.selectedUser();
-    const password = this.newPassword();
-    const confirm = this.confirmPassword();
-
-    if (!user) return;
-
-    if (password.length < 6) {
-      this.showToastMessage('Password must be at least 6 characters', 'error');
+    if (!confirm(`Are you sure you want to delete user "${user.name}"? This action cannot be undone.`)) {
       return;
     }
 
-    if (password !== confirm) {
-      this.showToastMessage('Passwords do not match', 'error');
-      return;
-    }
-
-    this.processingPassword.set(true);
-
-    this.adminService.resetUserPassword(user.id, password).subscribe({
+    this.adminService.deleteUser(user.id).subscribe({
       next: () => {
-        this.showToastMessage(`Password reset for ${user.name}`, 'success');
-        this.closePasswordModal();
-        this.processingPassword.set(false);
+        this.showToastMessage(`User "${user.name}" deleted successfully`, 'success');
+        // Remove from local list
+        this.users.update(users => users.filter(u => u.id !== user.id));
+        this.applyFilters();
+        // Refresh dashboard stats
+        this.loadDashboard();
       },
       error: (err) => {
-        this.showToastMessage(err.error?.error || 'Failed to reset password', 'error');
-        this.processingPassword.set(false);
+        this.showToastMessage(err.error?.error || 'Failed to delete user', 'error');
       },
     });
   }
@@ -334,6 +305,54 @@ export class AdminDashboard implements OnInit {
     this.showToast.set(true);
 
     setTimeout(() => this.showToast.set(false), 3000);
+  }
+
+  // Create User Functions
+  openCreateUserModal(): void {
+    this.newUser.set({
+      name: '',
+      email: '',
+      registrationNumber: '',
+      userType: 'dayscholar',
+      department: '',
+      year: undefined
+    });
+    this.showCreateUserModal.set(true);
+  }
+
+  closeCreateUserModal(): void {
+    this.showCreateUserModal.set(false);
+  }
+
+  submitCreateUser(): void {
+    const user = this.newUser();
+    if (!user.name || !user.email || !user.registrationNumber) {
+      this.showToastMessage('Please fill all required fields', 'error');
+      return;
+    }
+
+    this.creatingUser.set(true);
+    this.adminService.createUser(user).subscribe({
+      next: (response) => {
+        this.showToastMessage('User created successfully', 'success');
+        // Refresh list - prepend new user
+        const newUserFormatted: AdminUser = {
+          ...response.user,
+          collegePoints: 0,
+          totalSpent: 0,
+          totalOrders: 0,
+          createdAt: new Date().toISOString()
+        };
+        this.users.update(users => [newUserFormatted, ...users]);
+        this.applyFilters();
+        this.closeCreateUserModal();
+        this.creatingUser.set(false);
+      },
+      error: (err) => {
+        this.showToastMessage(err.error?.error || 'Failed to create user', 'error');
+        this.creatingUser.set(false);
+      }
+    });
   }
 
   logout(): void {

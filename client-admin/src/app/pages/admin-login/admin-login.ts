@@ -28,17 +28,13 @@ export class AdminLogin {
         this.showPassword.update(v => !v);
     }
 
-    goToUserLogin() {
-        window.location.href = 'http://localhost:4200/login';
-    }
-
     onSubmit() {
         this.errorMessage.set('');
         if (this.loginForm.invalid) return;
 
         this.isLoading.set(true);
 
-        this.userService.login(this.loginForm.value).subscribe({
+        this.userService.adminLogin(this.loginForm.value).subscribe({
             next: (response) => {
                 if (response.user?.isAdmin) {
                     this.router.navigate(['/admin']);

@@ -43,6 +43,16 @@ export class OrderService {
     this.fetchMyOrders();
   }
 
+  // Refresh data when user changes
+  refreshUserData() {
+    this.orderItems.set([]);
+    this.activeOrders.set([]);
+    this.selectedOrderItem.set(null);
+    this.orderGroupName.set(null);
+    this.loadFromStorage();
+    this.fetchMyOrders();
+  }
+
   // Fetch confirmed orders from backend
   fetchMyOrders() {
     this.http.get<any>('/api/orders/my').subscribe({
@@ -82,7 +92,6 @@ export class OrderService {
       }))
     }).subscribe({
       next: (res) => {
-        console.log('Order Success:', res);
         alert('Order placed successfully!');
 
         // Refresh User Data (Balance)
@@ -214,7 +223,12 @@ export class OrderService {
 
   // Persistence helpers
   private saveOrderItems(items: OrderItem[]) {
-    localStorage.setItem('temp_order_items', JSON.stringify(items));
+    const userId = this.userService.currentUser()?.id;
+    if (!userId) {
+      console.warn('Cannot save order items: No user logged in');
+      return;
+    }
+    localStorage.setItem(`temp_order_items_${userId}`, JSON.stringify(items));
   }
 
   private saveActiveOrders(orders: ConfirmedOrder[]) {
@@ -224,12 +238,25 @@ export class OrderService {
 
   private loadFromStorage() {
     try {
-      const tempItems = localStorage.getItem('temp_order_items');
+      const userId = this.userService.currentUser()?.id;
+      if (!userId) {
+        console.warn('Cannot load order items: No user logged in');
+        return;
+      }
+      const tempItems = localStorage.getItem(`temp_order_items_${userId}`);
       if (tempItems) {
         this.orderItems.set(JSON.parse(tempItems));
       }
     } catch (e) {
       console.error('Failed to load orders from storage', e);
+    }
+  }
+
+  // Clear user-specific localStorage
+  clearUserData() {
+    const userId = this.userService.currentUser()?.id;
+    if (userId) {
+      localStorage.removeItem(`temp_order_items_${userId}`);
     }
   }
 }
