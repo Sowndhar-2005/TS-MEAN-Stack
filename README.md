@@ -56,36 +56,56 @@ We have simplified the setup. You can run the entire ecosystem (Server + User Po
 
 ---
 
-## 🔧 Technical Configuration
+## 🔧 Technical Configuration Guide
 
-### Backend Structure (`server/src/`)
-The backend follows the **MVC (Model-View-Controller)** pattern for scalability.
-*   **`controllers/`**: Business logic.
-    *   `authController.ts`: Login, Registration, Profile management.
-    *   `orderController.ts`: Order placement, fetching history.
-    *   `adminController.ts`: Wallet management, Admin dashboard stats.
-*   **`models/`**: Mongoose Schemas (TypeScript Interfaces).
-    *   `User.ts`: Stores profile, wallet balance, and notifications.
-    *   `Order.ts`: Tracks items, total cost, and cooking status.
-*   **`routes/`**: API Endpoint definitions.
-*   **`middleware/`**: `auth.ts` for JWT verification.
+This project is built using a robust TypeScript environment. Follow these steps to set up the backend:
 
-### Frontend Structure
-Two separate Angular applications sharing a common design philosophy.
+1.  **Initialization**:
+    ```bash
+    npm init -y
+    ```
 
-#### 1. Client User (`client-user/`)
-*   **`src/app/pages/`**:
-    *   **Home/Menu**: Filter food by category/type (Veg/Non-Veg).
-    *   **Cart**: Manage selected items and checkout.
-    *   **Orders**: Live tracking of current order status (Cooking/Ready).
-    *   **Profile**: View usage stats, wallet transactions, and history.
-*   **`shared/top-navbar/`**: Contains the notification bell logic and wallet balance display.
+2.  **Dependencies**:
+    Install the necessary packages and dev-dependencies:
+    ```bash
+    npm install express mongoose dotenv cors helmet morgan
+    npm install --save-dev typescript @types/node @types/express @types/cors @types/morgan ts-node nodemon
+    ```
 
-#### 2. Client Admin (`client-admin/`)
-*   **`src/app/pages/`**:
-    *   **Overview**: Dashboard with total orders, revenue, and active user counts.
-    *   **Users**: List of all students; allows adding/reducing wallet balance.
-    *   **Change Requests**: (Future) Manage profile update requests.
+3.  **TypeScript Configuration**:
+    Generate `tsconfig.json`:
+    ```bash
+    npx tsc --init
+    ```
+    Ensure your `tsconfig.json` targets ES2020 or later and has `outDir` set to `./dist`.
+
+4.  **Scripts**:
+    Add the following to your `package.json` scripts:
+    ```json
+    "scripts": {
+      "start": "node dist/server.js",
+      "dev": "nodemon --exec ts-node src/server.ts",
+      "build": "tsc"
+    }
+    ```
+
+### 📂 Folder Structure Breakdown
+
+The project follows a standard MEAN stack architecture with a clear separation of concerns.
+
+#### **Frontend**
+The frontend is divided into two distinct Angular applications:
+*   **`client-user/` (Student Portal)**: The main interface for students to browse menus, add items to cart, and track orders. (Default Port: 4200)
+*   **`client-admin/` (Staff Portal)**: The administrative dashboard for canteen staff to manage menu items, view active orders, and update order statuses. (Port: 4201)
+
+#### **Backend**
+The `server/src/` directory is organized using the MVC pattern:
+*   **`controllers/`**: Handles incoming requests and business logic (e.g., `orderController.ts`).
+*   **`models/`**: Mongoose schemas and interfaces defining data structure (e.g., `User.ts`).
+*   **`routes/`**: Express route definitions mapping URLs to controllers.
+*   **`middleware/`**: Custom middleware for authentication (`auth.ts`) and error handling.
+*   **`utils/`**: Helper functions for logic (`logicHelpers.ts`).
+*   **`seed/`**: Database seeding scripts.
 
 ---
 
