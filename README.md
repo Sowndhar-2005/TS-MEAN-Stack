@@ -3,7 +3,7 @@
   <p>
     <img src="https://img.shields.io/badge/Angular-v17+-dd0031?style=for-the-badge&logo=angular" alt="Angular">
     <img src="https://img.shields.io/badge/TypeScript-v5.0-blue?style=for-the-badge&logo=typescript" alt="TypeScript">
-    <img src="https://img.shields.io/badge/Node.js-v18-green?style=for-the-badge&logo=node.js" alt="Node.js">
+    <img src="https://img.shields.io/badge/Node.js-v18+-green?style=for-the-badge&logo=node.js" alt="Node.js">
     <img src="https://img.shields.io/badge/MongoDB-v6.0-green?style=for-the-badge&logo=mongodb" alt="MongoDB">
   </p>
   <p><i>A unified, type-safe digital ecosystem for campus dining.</i></p>
@@ -22,39 +22,93 @@
 *   **Optimized Performance**: Built with Angular Signals and Standalone components for high speed.
 
 ---
+## 🛠 Technology Stack
 
-## � Quick Start (One-Command Run)
+This project leverages the **MEAN Stack** (MongoDB, Express, Angular, Node.js) fully written in **TypeScript** to ensure end-to-end type safety and maintainability.
 
-We have simplified the setup. You can run the entire ecosystem (Server + User Portal + Admin Portal) with a single command.
+This project leverages the **MEAN Stack** fully written in **TypeScript** to ensure end-to-end type safety.
 
-### Prerequisites
-*   Node.js (v18+)
-*   MongoDB Atlas URI (or local MongoDB)
+### Frontend (UI & UX)
+* **Angular v17+**: Utilizes **Signals** for reactive state management and **Standalone Components** for high performance.
+* **Architecture**: Component-based UI logic with dedicated services for Auth, Cart, and Orders.
+* **Styling**: A combination of Bootstrap’s utility classes and custom component-scoped CSS to ensure a polished user experience..
 
-### Setup & Run
+### Backend (Logic & API)
+* **Node.js & Express**: RESTful API built with an MVC pattern for clear separation of concerns.
+* **Mongoose**: Provides schema-based modeling for Users, Food, and Orders.
+* **Security**: Implements JWT authentication, Helmet security headers, and CORS protection.
+
+---
+
+---
+## 🚀 Quick Start (One-Command Run)
+
+We have simplified the ecosystem setup. You can install all dependencies and start the entire stack (Server + User Portal + Admin Portal) with a single command.
+
+### 📋 Prerequisites
+* **Node.js**: v18.0.0 or higher
+* **MongoDB**: A running instance (Local or MongoDB Atlas)
+* **Git**: For cloning the repository
+
+### 🛠️ Setup & Run
 1.  **Clone the Repository**:
     ```bash
     git clone https://github.com/Sowndhar-2005/TS-MEAN-Stack.git
     cd TS-MEAN-Stack
     ```
 
-2.  **Run Everything**:
-    This command installs all dependencies for backend/frontend and starts all three servers concurrently.
+2.  **Install & Start Everything**:
+    This command automatically triggers `npm install` recursively across the root, server, and both client folders before launching the servers concurrently.
     ```bash
     npm run start-all
     ```
-    *(Note: If `start-all` is not configured in your specific root package.json, please follow the manual steps below)*
-
-### Manual Commands
-*   **Server**: `cd server && npm run dev` (Port: 3000)
-*   **User App**: `cd client-user && npm start` (Port: 4200)
-*   **Admin App**: `cd client-admin && npm start` (Port: 4201)
-
-> **Login Credentials (Demo)**:
-> *   **Admin**: `admin@college.edu` / `admin123`
-> *   **User**: `alice@college.edu` / `password123`
 
 ---
+
+## 💾 MongoDB Configuration
+
+The system uses MongoDB to store all user, food, and transaction data. To connect the application, you must configure the backend environment:
+
+1.  **Database Connection**:
+    * **Local**: Install [MongoDB Community Server](https://www.mongodb.com/try/download/community). The app defaults to `mongodb://localhost:27017/campus-canteen`.
+    * **Cloud**: Create a cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and obtain your connection string.
+2.  **Environment Setup**:
+    * Navigate to the `server/` directory.
+    * Create a `.env` file and add your credentials:
+        ```env
+        PORT=3000
+        MONGODB_URI=your_mongodb_connection_string
+        JWT_SECRET=your_super_secret_key
+        ```
+
+---
+
+## 📥 Installation Guide (For New Clones)
+
+When cloning this project for the first time, all necessary Node.js packages must be installed.
+
+### Option 1: Automatic (Recommended)
+Running `npm run start-all` from the root directory handles the installation for all sub-projects automatically.
+
+### Option 2: Manual Installation
+If you prefer to set up components individually, run `npm install` in each directory:
+1.  **Root Directory**: `npm install` (Installs concurrency tools)
+2.  **Backend Server**: `cd server && npm install`
+3.  **User Portal**: `cd client-user && npm install`
+4.  **Admin Portal**: `cd client-admin && npm install`
+
+---
+
+## 🔐 Access Control & Security
+
+### Strict College-Only Login
+To ensure a secure environment, this application does not allow open public registration:
+* **Admin-Pre-Registration**: Access is granted only to students whose information is already present in the student directory managed by the Admin.
+* **Login Restriction**: If a student's email and details are not found in the verified campus database, the system will block the login attempt. This effectively prevents non-college students from accessing the hub.
+
+### 🔑 Demo Credentials
+* **Admin Access**: `admin@gamil.com` / `admin123`
+* **User Access**: `john@gmail.com` / `21CSR001`
 
 ## 🔧 Technical Configuration Guide
 
@@ -109,23 +163,33 @@ The `server/src/` directory is organized using the MVC pattern:
 
 ---
 
-## 📱 Screen Guide
+## 📱 Detailed Screen & Security Guide
 
-### User Portal
-1.  **Home (Menu)**: Browse food items. Search by name or tag. Add to cart.
-2.  **Cart**: Review items. Place order using Wallet. *(Note: UPI is currently disabled)*.
-3.  **Active Orders**: See real-time progress of your meal.
-4.  **Profile**:
-    *   **Activity History**: Comprehensive log of Orders and Wallet Credits/Debits.
-    *   **Stats**: Total spent and orders placed.
-5.  **Notifications**: Click the bell icon in the navbar to see updates about orders or balance.
-
-### Admin Portal
-1.  **Dashboard**: High-level metrics of canteen performance.
-2.  **User Management**: Search for students. Click actions to **Add Funds** or **Penalty (Reduce Funds)**.
-3.  **Order Management**: View all incoming orders and update their status (e.g., mark as Ready/Completed).
+### 🔐 Access Control (Strict College-Only Login)
+To ensure the security of the campus ecosystem, this application does not allow open registration:
+* **Admin-Controlled Entry**: Only students whose information is pre-loaded into the database by the Admin can log in.
+* **Authentication Check**: If a student's email is not found in the verified campus list, access is denied. This prevents non-college students from using the system.
 
 ---
+
+### 🎓 User Portal (Student Interface)
+1.  **Home (Menu)**: Browse the digital menu with advanced search and tag-based filtering. 
+2.  **Cart**: Review items and manage quantities before placing an order.
+3.  **Active Orders**: View real-time progress. The system tracks the order from "Pending" to "Ready".
+4.  **Profile & Stats**:
+    * **Activity History**: A detailed log of all orders and wallet transactions.
+    * **User Stats**: Insights into total orders placed and total money spent.
+5.  **Notifications**: Real-time alerts for order readiness or wallet balance changes, accessible via the navbar bell icon.
+6.  **Invite Page**: A dedicated screen for the "Collaborative Ordering" feature to facilitate group meals.
+
+---
+
+### 🛠️ Admin Portal (Staff Interface)
+1.  **Dashboard**: Metrics-driven view of canteen performance, including total revenue and order volume.
+2.  **User Management**: 
+    * **Directory**: Search and view the list of authorized students.
+    * **Wallet Actions**: Manually **Add Funds** for cash recharges or apply a **Penalty** (Reduce Funds).
+3.  **Order Management**: Centralized hub to manage the kitchen workflow by updating order statuses (e.g., mark as Cooking or Completed).
 
 ## 📡 API Specification
 
