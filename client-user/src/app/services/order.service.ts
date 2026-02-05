@@ -81,7 +81,9 @@ export class OrderService {
     if (items.length === 0) return false;
 
     // Use 'wallet' or 'upi' (lowercase) to match backend enum
-    const method = paymentMethod === 'WALLET' ? 'wallet' : 'upi';
+    // UPI NOT IMPLEMENTED YET - Forcing Wallet
+    const method = 'wallet';
+    // const method = paymentMethod === 'WALLET' ? 'wallet' : 'upi';
 
     this.http.post<any>('/api/orders', {
       paymentMethod: method,

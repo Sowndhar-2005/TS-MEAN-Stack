@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, adminLogin, getMe, updateProfile } from '../controllers/authController';
+import { login, adminLogin, getMe, updateProfile, markNotificationsAsRead } from '../controllers/authController';
 import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
@@ -11,5 +11,6 @@ router.post('/admin-login', adminLogin);
 // Protected routes
 router.get('/me', authMiddleware, getMe);
 router.put('/profile', authMiddleware, updateProfile);
+router.put('/notifications/read', authMiddleware, markNotificationsAsRead);
 
 export default router;

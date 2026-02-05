@@ -55,6 +55,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                 collegePoints: user.collegePoints,
                 department: user.department,
                 year: user.year,
+                notifications: (user.notifications || []).filter(n => !n.read),
+                walletTransactions: user.walletTransactions || [],
             },
         });
 
@@ -112,6 +114,8 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
                 collegePoints: user.collegePoints,
                 department: user.department,
                 year: user.year,
+                notifications: (user.notifications || []).filter(n => !n.read),
+                walletTransactions: user.walletTransactions || [],
             },
         });
 
@@ -145,6 +149,8 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
             totalSpent: user.totalSpent,
             totalOrders: user.totalOrders,
             savedCombos: user.savedCombos,
+            notifications: (user.notifications || []).filter(n => !n.read), // Only send unread notifications
+            walletTransactions: user.walletTransactions || [],
         });
     } catch (error: any) {
         console.error('Get profile error:', error);
@@ -176,10 +182,54 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
                 email: user.email,
                 department: user.department,
                 year: user.year,
+                notifications: (user.notifications || []).filter(n => !n.read),
+                walletTransactions: user.walletTransactions || [],
             },
         });
     } catch (error: any) {
         console.error('Update profile error:', error);
         res.status(500).json({ error: 'Failed to update profile' });
+    }
+};
+
+// Mark notifications as read
+export const markNotificationsAsRead = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { notificationId } = req.body;
+
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+
+        if (!user.notifications || user.notifications.length === 0) {
+            res.json({ message: 'No notifications to mark' });
+            return;
+        }
+
+        // If specific notificationId provided, mark only that one
+        if (notificationId) {
+            const notification = user.notifications.find(n =>
+                n.createdAt.toISOString() === notificationId ||
+                (n as any)._id?.toString() === notificationId
+            );
+
+            if (notification) {
+                notification.read = true;
+                await user.save();
+            }
+        } else {
+            // Mark all as read
+            user.notifications.forEach(notification => {
+                notification.read = true;
+            });
+            await user.save();
+        }
+
+        res.json({ message: 'Notifications marked as read' });
+    } catch (error: any) {
+        console.error('Mark notifications error:', error);
+        res.status(500).json({ error: 'Failed to mark notifications' });
     }
 };

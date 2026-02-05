@@ -44,6 +44,11 @@
 
           <!-- Action Buttons -->
           <div class="mt-4 d-grid gap-2">
+            <button class="btn btn-primary btn-light text-primary text-start d-flex align-items-center gap-3 py-3 justify-content-center" (click)="openSettings()">
+              <i class="bi bi-gear"></i>
+              <span class="fw-semibold">Settings</span>
+            </button>
+
             <button class="btn btn-danger btn-light text-danger text-start d-flex align-items-center gap-3 py-3 justify-content-center" (click)="logout()">
               <i class="bi bi-box-arrow-right"></i>
               <span class="fw-semibold">Sign Out</span>
@@ -91,8 +96,8 @@
         <!-- Order History Table -->
         <div class="card border-0 shadow-sm rounded-4 flex-grow-1 overflow-hidden d-flex flex-column">
           <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3 px-4 flex-shrink-0">
-            <h3 class="h5 fw-bold mb-0">Order History</h3>
-            <span class="badge bg-primary rounded-pill">{{ orderService.activeOrders().length }} Orders</span>
+            <h3 class="h5 fw-bold mb-0">Activity History</h3>
+            <span class="badge bg-primary rounded-pill">{{ historyItems().length }} Items</span>
           </div>
           
           <div class="table-responsive flex-grow-1 overflow-y-auto no-scrollbar">
@@ -100,39 +105,55 @@
               <thead class="table-light sticky-top" style="z-index: 10;">
                 <tr>
                   <th class="fw-bold text-muted text-uppercase py-3 ps-4" style="font-size: 0.75rem;">Time</th>
-                  <th class="fw-bold text-muted text-uppercase py-3" style="font-size: 0.75rem;">Items</th>
-                  <th class="fw-bold text-muted text-uppercase py-3 text-center" style="width: 50px; font-size: 0.75rem;">View</th>
-                  <th class="fw-bold text-muted text-uppercase py-3 text-end pe-4" style="font-size: 0.75rem;">Total</th>
+                  <th class="fw-bold text-muted text-uppercase py-3" style="font-size: 0.75rem;">Activity</th>
+                  <th class="fw-bold text-muted text-uppercase py-3 text-center" style="width: 50px; font-size: 0.75rem;">Details</th>
+                  <th class="fw-bold text-muted text-uppercase py-3 text-end pe-4" style="font-size: 0.75rem;">Amount</th>
                 </tr>
               </thead>
               <tbody>
-                @for (order of orderService.activeOrders(); track order.id) {
+                @for (item of historyItems(); track item.id) {
                     <tr>
                         <td class="ps-4 align-middle">
                             <div class="d-flex flex-column">
-                                <span class="fw-medium text-dark">{{ order.date | date:'MMM d' }}</span>
-                                <small class="text-muted">{{ order.date | date:'shortTime' }}</small>
+                                <span class="fw-medium text-dark">{{ item.date | date:'MMM d' }}</span>
+                                <small class="text-muted">{{ item.date | date:'shortTime' }}</small>
                             </div>
                         </td>
                         <td class="align-middle">
                             <div class="d-flex flex-column">
-                                <span class="fw-medium text-dark text-truncate" style="max-width: 200px;">
-                                    @for (item of order.items; track item.food._id; let last = $last) {
-                                        {{ item.food.name }}{{ !last ? ', ' : '' }}
-                                    }
+                                <span class="fw-medium text-dark text-truncate" style="max-width: 250px;">
+                                    {{ item.title }}
                                 </span>
-                                <small class="text-muted">{{ order.items.length }} Items</small>
+                                <div class="d-flex align-items-center gap-1">
+                                  @if (item.type === 'order') {
+                                    <span class="badge bg-info-subtle text-info rounded-pill px-2" style="font-size: 0.65rem;">Order</span>
+                                  } @else if (item.type === 'credit') {
+                                    <span class="badge bg-success-subtle text-success rounded-pill px-2" style="font-size: 0.65rem;">Wallet Credit</span>
+                                  } @else if (item.type === 'debit') {
+                                    <span class="badge bg-warning-subtle text-warning rounded-pill px-2" style="font-size: 0.65rem;">Wallet Debit</span>
+                                  }
+                                  <small class="text-muted" style="font-size: 0.75rem;">{{ item.badge }}</small>
+                                </div>
                             </div>
                         </td>
-                        <td class="text-end align-middle">
-                            <button class="btn btn-warning btn-sm rounded-3 text-dark shadow-sm d-flex align-items-center justify-content-center" 
-                                    style="width: 32px; height: 32px;" 
-                                    title="View Full Order"
-                                    (click)="viewOrder(order)">
-                                <i class="bi bi-eye-fill"></i>
-                            </button>
+                        <td class="text-center align-middle">
+                            @if (item.type === 'order') {
+                              <button class="btn btn-warning btn-sm rounded-circle text-dark shadow-sm d-flex align-items-center justify-content-center mx-auto" 
+                                      style="width: 32px; height: 32px;" 
+                                      title="View Full Order"
+                                      (click)="viewOrder(item.raw)">
+                                  <i class="bi bi-eye-fill"></i>
+                              </button>
+                            } @else {
+                              <div class="text-muted"><i class="bi bi-info-circle"></i></div>
+                            }
                         </td>
-                        <td class="fw-bold text-end text-primary pe-4 align-middle">₹{{ order.total }}</td>
+                        <td class="fw-bold text-end pe-4 align-middle" 
+                            [class.text-primary]="item.type === 'order'"
+                            [class.text-success]="item.type === 'credit'"
+                            [class.text-danger]="item.type === 'debit'">
+                            {{ item.type === 'credit' ? '+' : (item.type === 'debit' ? '-' : '') }}₹{{ item.amount }}
+                        </td>
                     </tr>
                 } @empty {
                     <tr>
@@ -205,6 +226,205 @@
 </div>
 }
 
+<!-- Settings Modal -->
+@if (showSettingsModal()) {
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="modal-header bg-gradient border-0 text-white px-4 py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+          <i class="bi bi-gear-fill"></i>
+          Edit Profile Settings
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeSettings()"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form>
+          <!-- Name Field -->
+          <div class="mb-4">
+            <label class="form-label fw-bold text-muted small text-uppercase mb-2">
+              <i class="bi bi-person-fill me-1"></i>
+              Full Name
+            </label>
+            <input 
+              type="text" 
+              class="form-control form-control-lg rounded-3 border-2 shadow-sm" 
+              [value]="editForm().name"
+              (input)="updateFormField('name', $event)"
+              name="name"
+              placeholder="Enter your full name"
+              required
+            />
+          </div>
+
+          <!-- Department Dropdown -->
+          <div class="mb-4">
+            <label class="form-label fw-bold text-muted small text-uppercase mb-2">
+              <i class="bi bi-building me-1"></i>
+              Department
+            </label>
+            <select 
+              class="form-select form-select-lg rounded-3 border-2 shadow-sm" 
+              [value]="editForm().department"
+              (change)="updateFormField('department', $event)"
+              name="department"
+              required
+            >
+              <option value="">Select Department</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Information Technology">Information Technology</option>
+              <option value="Electronics and Communication">Electronics and Communication</option>
+              <option value="Electrical Engineering">Electrical Engineering</option>
+              <option value="Mechanical Engineering">Mechanical Engineering</option>
+              <option value="Civil Engineering">Civil Engineering</option>
+              <option value="Artificial Intelligence">Artificial Intelligence</option>
+              <option value="Data Science">Data Science</option>
+              <option value="Cyber Security">Cyber Security</option>
+            </select>
+          </div>
+
+          <!-- Year Field -->
+          <div class="mb-4">
+            <label class="form-label fw-bold text-muted small text-uppercase mb-2">
+              <i class="bi bi-calendar-check me-1"></i>
+              Year
+            </label>
+            <select 
+              class="form-select form-select-lg rounded-3 border-2 shadow-sm" 
+              [value]="editForm().year"
+              (change)="updateFormField('year', $event)"
+              name="year"
+              required
+            >
+              <option [value]="1">1st Year</option>
+              <option [value]="2">2nd Year</option>
+              <option [value]="3">3rd Year</option>
+              <option [value]="4">4th Year</option>
+            </select>
+          </div>
+
+          <hr class="my-4"/>
+
+          <!-- Email Change Request -->
+          <div class="mb-4">
+            <label class="form-label fw-bold text-muted small text-uppercase mb-2">
+              <i class="bi bi-envelope-fill me-1"></i>
+              Email (Requires Admin Approval)
+            </label>
+            <div class="input-group input-group-lg">
+              <input 
+                type="email" 
+                class="form-control rounded-start-3 border-2 shadow-sm" 
+                [value]="changeRequestForm().email"
+                (input)="updateChangeRequestField('email', $event)"
+                name="newEmail"
+                placeholder="Enter new email"
+              />
+              <button 
+                class="btn btn-outline-primary rounded-end-3" 
+                type="button"
+                (click)="submitChangeRequest('email')"
+                [disabled]="!changeRequestForm().email || isSubmittingRequest()"
+              >
+                Request
+              </button>
+            </div>
+            <small class="text-muted d-block mt-1">Current: {{ userService.currentUser()?.email }}</small>
+          </div>
+
+          <!-- Registration Number Change Request -->
+          <div class="mb-4">
+            <label class="form-label fw-bold text-muted small text-uppercase mb-2">
+              <i class="bi bi-card-text me-1"></i>
+              Registration Number (Requires Admin Approval)
+            </label>
+            <div class="input-group input-group-lg">
+              <input 
+                type="text" 
+                class="form-control rounded-start-3 border-2 shadow-sm" 
+                [value]="changeRequestForm().registrationNumber"
+                (input)="updateChangeRequestField('registrationNumber', $event)"
+                name="newRegNumber"
+                placeholder="Enter new registration number"
+              />
+              <button 
+                class="btn btn-outline-primary rounded-end-3" 
+                type="button"
+                (click)="submitChangeRequest('registrationNumber')"
+                [disabled]="!changeRequestForm().registrationNumber || isSubmittingRequest()"
+              >
+                Request
+              </button>
+            </div>
+            <small class="text-muted d-block mt-1">Current: {{ userService.currentUser()?.registrationNumber }}</small>
+          </div>
+
+          <!-- Info Note -->
+          <div class="alert alert-info border-0 rounded-3 d-flex align-items-start gap-2 mb-0" style="background-color: #e7f3ff;">
+            <i class="bi bi-info-circle-fill text-primary mt-1"></i>
+            <small class="text-muted">
+              <strong>Note:</strong> Name, Department, and Year changes are immediate. Email and Registration Number changes require admin approval and will be notified once approved.
+            </small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0 p-3 bg-light">
+        <div class="d-flex w-100 gap-2">
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary flex-grow-1 py-2 rounded-3 fw-bold" 
+            (click)="closeSettings()"
+            [disabled]="isUpdating()"
+          >
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-primary flex-grow-1 py-2 rounded-3 fw-bold d-flex justify-content-center align-items-center gap-2 position-relative" 
+            (click)="updateProfile()"
+            [disabled]="isUpdating()"
+          >
+            @if (isUpdating()) {
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Updating...
+            } @else {
+              <i class="bi bi-check-circle"></i>
+              Save Changes
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Toast Notification -->
+@if (showToast()) {
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 9999; margin-top: 70px;">
+  <div 
+    class="toast show shadow-lg border-0 rounded-4 overflow-hidden" 
+    role="alert"
+    [class.bg-success]="toastType() === 'success'"
+    [class.bg-danger]="toastType() === 'error'"
+  >
+    <div class="toast-body text-white d-flex align-items-center gap-3 p-3">
+      <i 
+        class="fs-4" 
+        [class.bi-check-circle-fill]="toastType() === 'success'"
+        [class.bi-exclamation-circle-fill]="toastType() === 'error'"
+      ></i>
+      <span class="fw-semibold flex-grow-1">{{ toastMessage() }}</span>
+      <button 
+        type="button" 
+        class="btn-close btn-close-white" 
+        (click)="showToast.set(false)"
+      ></button>
+    </div>
+  </div>
+</div>
+}
+
 <style>
 /* Enforce No Scrollbar Style just in case */
 .no-scrollbar::-webkit-scrollbar {
@@ -215,5 +435,4 @@
   scrollbar-width: none;  /* Firefox */
 }
 </style>
-
 

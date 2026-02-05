@@ -135,4 +135,16 @@ export class AdminService {
     deleteUser(userId: string): Observable<{ message: string }> {
         return this.http.delete<{ message: string }>(`${this.apiUrl}/users/${userId}`);
     }
+
+    // Profile Change Request Management
+    getPendingChangeRequests(): Observable<any[]> {
+        return this.http.get<any[]>('/api/profile-changes/pending');
+    }
+
+    reviewChangeRequest(requestId: string, action: 'approve' | 'reject', rejectionReason?: string): Observable<any> {
+        return this.http.put<any>(`/api/profile-changes/${requestId}/review`, {
+            action,
+            rejectionReason
+        });
+    }
 }

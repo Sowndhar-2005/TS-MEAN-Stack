@@ -16,6 +16,20 @@ export interface User {
   totalSpent: number;
   totalOrders: number;
   avatar?: string;
+  notifications?: Array<{
+    message: string;
+    type: 'info' | 'success' | 'warning';
+    read: boolean;
+    createdAt: Date | string;
+  }>;
+  walletTransactions?: Array<{
+    type: 'credit' | 'debit' | 'order';
+    amount: number;
+    balance: number;
+    reason?: string;
+    orderId?: string;
+    createdAt: Date | string;
+  }>;
 }
 
 @Injectable({
@@ -124,5 +138,42 @@ export class UserService {
       return true;
     }
     return false;
+  }
+
+  // Update user profile
+  updateProfile(data: { name: string; department: string; year: number }) {
+    return this.http.put<any>('/api/auth/profile', data);
+  }
+
+  // Submit profile change request (for email and registration number)
+  submitProfileChangeRequest(requestType: 'email' | 'registrationNumber', requestedValue: string) {
+    return this.http.post<any>('/api/profile-changes/submit', {
+      requestType,
+      requestedValue
+    });
+  }
+
+  // Mark notification as read/dismissed
+  // Mark notification as read/dismissed
+  markNotificationAsRead(notification: any) {
+    // Optimistically update local state
+    const currentUser = this.currentUser();
+    if (currentUser && currentUser.notifications) {
+      const updatedNotifications = currentUser.notifications.map(n => {
+        if (n === notification || (n as any)._id === notification._id || n.createdAt === notification.createdAt) {
+          return { ...n, read: true };
+        }
+        return n;
+      });
+
+      this.currentUser.set({
+        ...currentUser,
+        notifications: updatedNotifications
+      });
+    }
+
+    return this.http.put<any>('/api/auth/notifications/read', {
+      notificationId: notification._id || notification.createdAt
+    });
   }
 }

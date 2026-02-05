@@ -21,6 +21,20 @@ export interface IUser extends Document {
     }>;
     totalSpent: number;
     totalOrders: number;
+    notifications: Array<{
+        message: string;
+        type: 'info' | 'success' | 'warning';
+        read: boolean;
+        createdAt: Date;
+    }>;
+    walletTransactions: Array<{
+        type: 'credit' | 'debit' | 'order';
+        amount: number;
+        balance: number;
+        reason?: string;
+        orderId?: mongoose.Types.ObjectId;
+        createdAt: Date;
+    }>;
     createdAt: Date;
     updatedAt: Date;
     comparePassword(candidatePassword: string): Promise<boolean>;
@@ -108,6 +122,32 @@ const userSchema = new Schema<IUser>(
             default: 0,
             min: 0,
         },
+        notifications: [
+            {
+                message: { type: String, required: true },
+                type: {
+                    type: String,
+                    enum: ['info', 'success', 'warning'],
+                    default: 'info'
+                },
+                read: { type: Boolean, default: false },
+                createdAt: { type: Date, default: Date.now },
+            },
+        ],
+        walletTransactions: [
+            {
+                type: {
+                    type: String,
+                    enum: ['credit', 'debit', 'order'],
+                    required: true
+                },
+                amount: { type: Number, required: true },
+                balance: { type: Number, required: true },
+                reason: { type: String },
+                orderId: { type: Schema.Types.ObjectId, ref: 'Order' },
+                createdAt: { type: Date, default: Date.now },
+            },
+        ],
     },
     {
         timestamps: true,

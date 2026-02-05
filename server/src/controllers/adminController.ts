@@ -257,6 +257,30 @@ export const addWalletBalance = async (req: AuthRequest, res: Response): Promise
 
         // Add amount to wallet
         user.walletBalance = (user.walletBalance || 0) + amount;
+
+        // Add notification
+        if (!user.notifications) {
+            user.notifications = [];
+        }
+        user.notifications.push({
+            message: `₹${amount} added to your wallet${reason ? '. Reason: ' + reason : ''}`,
+            type: 'success',
+            read: false,
+            createdAt: new Date()
+        });
+
+        // Add transaction history
+        if (!user.walletTransactions) {
+            user.walletTransactions = [];
+        }
+        user.walletTransactions.push({
+            type: 'credit',
+            amount: amount,
+            balance: user.walletBalance,
+            reason: reason || 'Admin added balance',
+            createdAt: new Date()
+        });
+
         await user.save();
 
         console.log(`[ADMIN] Added ₹${amount} to user ${user.name} (${user.registrationNumber}) wallet. Reason: ${reason || 'Not specified'}`);
@@ -309,6 +333,30 @@ export const reduceWalletBalance = async (req: AuthRequest, res: Response): Prom
 
         // Reduce amount from wallet
         user.walletBalance = (user.walletBalance || 0) - amount;
+
+        // Add notification
+        if (!user.notifications) {
+            user.notifications = [];
+        }
+        user.notifications.push({
+            message: `₹${amount} deducted from your wallet${reason ? '. Reason: ' + reason : ''}`,
+            type: 'warning',
+            read: false,
+            createdAt: new Date()
+        });
+
+        // Add transaction history
+        if (!user.walletTransactions) {
+            user.walletTransactions = [];
+        }
+        user.walletTransactions.push({
+            type: 'debit',
+            amount: amount,
+            balance: user.walletBalance,
+            reason: reason || 'Admin deducted balance',
+            createdAt: new Date()
+        });
+
         await user.save();
 
         console.log(`[ADMIN] Reduced ₹${amount} from user ${user.name} (${user.registrationNumber}) wallet. Reason: ${reason || 'Not specified'}`);

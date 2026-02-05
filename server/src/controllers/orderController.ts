@@ -98,6 +98,8 @@ export const placeOrder = async (req: AuthRequest, res: Response): Promise<void>
             if (user.collegePoints < totalAmount) {
                 throw new Error('Insufficient college points');
             }
+        } else {
+            throw new Error('Invalid payment method. Only Wallet is currently supported.');
         }
 
         // 4. Create order

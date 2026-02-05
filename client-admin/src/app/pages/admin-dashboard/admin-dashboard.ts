@@ -46,7 +46,7 @@ export class AdminDashboard implements OnInit {
   showToast = signal<boolean>(false);
 
   // Active tab
-  activeTab = signal<'users' | 'stats'>('users');
+  activeTab = signal<'users' | 'stats' | 'requests'>('users');
 
   // Filter state
   filterType = signal<'all' | 'dayscholar' | 'hosteller'>('all');
@@ -63,11 +63,17 @@ export class AdminDashboard implements OnInit {
   });
   creatingUser = signal<boolean>(false);
 
+  // Profile Change Requests state
+  changeRequests = signal<any[]>([]);
+  loadingRequests = signal<boolean>(false);
+  processingRequest = signal<boolean>(false);
+
   // Polling subscription
   private pollSubscription: any;
 
   ngOnInit(): void {
     this.loadDashboard();
+    this.loadChangeRequests();
 
     // Auto-refresh every 5 seconds to keep data in sync with user actions
     // Using setInterval instead of RxJS interval for simplicity in this context
@@ -108,6 +114,65 @@ export class AdminDashboard implements OnInit {
         }
       },
       error: (err) => console.error('Silent users refresh failed', err)
+    });
+
+    // Also refresh change requests
+    if (this.activeTab() === 'requests') {
+      this.loadChangeRequestsSilent();
+    }
+  }
+
+  loadChangeRequests(): void {
+    this.loadingRequests.set(true);
+    this.adminService.getPendingChangeRequests().subscribe({
+      next: (requests: any) => {
+        this.changeRequests.set(requests);
+        this.loadingRequests.set(false);
+      },
+      error: (err: any) => {
+        console.error('Error loading change requests:', err);
+        this.loadingRequests.set(false);
+      }
+    });
+  }
+
+  loadChangeRequestsSilent(): void {
+    this.adminService.getPendingChangeRequests().subscribe({
+      next: (requests: any) => {
+        this.changeRequests.set(requests);
+      },
+      error: (err: any) => console.error('Silent change requests refresh failed', err)
+    });
+  }
+
+  approveChangeRequest(requestId: string): void {
+    this.processingRequest.set(true);
+    this.adminService.reviewChangeRequest(requestId, 'approve').subscribe({
+      next: (response: any) => {
+        this.showToastMessage('Change request approved successfully', 'success');
+        this.processingRequest.set(false);
+        this.loadChangeRequests();
+        this.loadDashboard(); // Refresh user data
+      },
+      error: (err: any) => {
+        this.showToastMessage(err.error?.error || 'Failed to approve request', 'error');
+        this.processingRequest.set(false);
+      }
+    });
+  }
+
+  rejectChangeRequest(requestId: string, reason: string = 'Invalid request'): void {
+    this.processingRequest.set(true);
+    this.adminService.reviewChangeRequest(requestId, 'reject', reason).subscribe({
+      next: (response: any) => {
+        this.showToastMessage('Change request rejected', 'success');
+        this.processingRequest.set(false);
+        this.loadChangeRequests();
+      },
+      error: (err: any) => {
+        this.showToastMessage(err.error?.error || 'Failed to reject request', 'error');
+        this.processingRequest.set(false);
+      }
     });
   }
 
@@ -172,8 +237,11 @@ export class AdminDashboard implements OnInit {
     this.applyFilters();
   }
 
-  setActiveTab(tab: 'users' | 'stats'): void {
+  setActiveTab(tab: 'users' | 'stats' | 'requests'): void {
     this.activeTab.set(tab);
+    if (tab === 'requests') {
+      this.loadChangeRequests();
+    }
   }
 
   // User Detail Modal functions

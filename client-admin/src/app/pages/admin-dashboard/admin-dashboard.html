@@ -24,7 +24,7 @@
     <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
         <div class="d-flex align-items-center gap-3 flex-grow-1">
              <h2 class="fw-bold mb-0 text-dark">
-                {{ activeTab() === 'stats' ? 'Dashboard Overview' : 'User Management' }}
+                {{ activeTab() === 'stats' ? 'Dashboard Overview' : activeTab() === 'requests' ? 'Profile Change Requests' : 'User Management' }}
             </h2>
 
             <!-- Search Bar (Visible only on Users tab) -->
@@ -86,6 +86,29 @@
                          >
                             <i class="bi bi-people-fill fs-5"></i>
                             <span class="fw-bold">Users</span>
+                         </button>
+
+                         <button 
+                            (click)="setActiveTab('requests')"
+                            class="btn w-100 d-flex align-items-center justify-content-between gap-3 p-3 rounded-3 border-0 text-start transition-all"
+                            [class.bg-primary]="activeTab() === 'requests'"
+                            [class.text-white]="activeTab() === 'requests'"
+                            [class.bg-transparent]="activeTab() !== 'requests'"
+                            [class.text-secondary]="activeTab() !== 'requests'"
+                         >
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-file-earmark-text-fill fs-5"></i>
+                                <span class="fw-bold">Change Requests</span>
+                            </div>
+                            @if (changeRequests().length > 0) {
+                                <span class="badge rounded-pill" 
+                                      [class.bg-warning]="activeTab() !== 'requests'"
+                                      [class.text-dark]="activeTab() !== 'requests'"
+                                      [class.bg-white]="activeTab() === 'requests'"
+                                      [class.text-primary]="activeTab() === 'requests'">
+                                    {{ changeRequests().length }}
+                                </span>
+                            }
                          </button>
                      </div>
                  </div>
@@ -248,6 +271,101 @@
                                 <div class="col-12 py-5 text-center text-muted">
                                     <i class="bi bi-search display-1 opacity-25"></i>
                                     <h4 class="mt-3">No users found</h4>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+
+                <!-- Change Requests View -->
+                @if (activeTab() === 'requests') {
+                    @if (loadingRequests()) {
+                        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+                    } @else if (changeRequests().length === 0) {
+                        <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+                            <i class="bi bi-check-circle-fill text-success display-1 mb-3"></i>
+                            <h4 class="fw-bold mb-2">All Caught Up!</h4>
+                            <p class="text-muted">No pending change requests at the moment.</p>
+                        </div>
+                    } @else {
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                            @for (request of changeRequests(); track request._id) {
+                                <div class="col">
+                                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                                        <div class="card-body p-4">
+                                            <!-- Request Header -->
+                                            <div class="d-flex align-items-start justify-content-between mb-3">
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                                        @if (request.requestType === 'email') {
+                                                            <i class="bi bi-envelope-fill text-primary"></i>
+                                                            <h6 class="fw-bold mb-0">Email Change</h6>
+                                                        } @else {
+                                                            <i class="bi bi-card-text text-warning"></i>
+                                                            <h6 class="fw-bold mb-0">Registration Number</h6>
+                                                        }
+                                                    </div>
+                                                    <small class="text-muted">{{ request.userId?.name || 'Unknown User' }}</small>
+                                                </div>
+                                                <span class="badge bg-warning text-dark rounded-pill">Pending</span>
+                                            </div>
+
+                                            <!-- User Info -->
+                                            <div class="bg-light rounded-3 p-3 mb-3">
+                                                <div class="mb-2">
+                                                    <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Student</small>
+                                                    <div class="fw-bold">{{ request.userId?.name }}</div>
+                                                    <small class="text-muted">{{ request.userId?.registrationNumber }}</small>
+                                                </div>
+                                            </div>
+
+                                            <!-- Change Details -->
+                                            <div class="mb-3">
+                                                <div class="d-flex align-items-center gap-2 mb-2">
+                                                    <small class="text-muted fw-bold text-uppercase" style="font-size: 0.65rem;">Current Value</small>
+                                                </div>
+                                                <div class="p-2 bg-light rounded-3 mb-2">
+                                                    <code class="text-dark" style="font-size: 0.85rem;">{{ request.currentValue }}</code>
+                                                </div>
+
+                                                <div class="d-flex align-items-center gap-2 mb-2">
+                                                    <i class="bi bi-arrow-down text-primary"></i>
+                                                    <small class="text-muted fw-bold text-uppercase" style="font-size: 0.65rem;">Requested Value</small>
+                                                </div>
+                                                <div class="p-2 bg-success bg-opacity-10 border border-success rounded-3">
+                                                    <code class="text-success fw-bold" style="font-size: 0.85rem;">{{ request.requestedValue }}</code>
+                                                </div>
+                                            </div>
+
+                                            <!-- Request Date -->
+                                            <div class="mb-3">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-clock me-1"></i>
+                                                    Requested {{ formatDateTime(request.requestedAt) }}
+                                                </small>
+                                            </div>
+
+                                            <!-- Actions -->
+                                            <div class="d-flex gap-2">
+                                                <button 
+                                                    class="btn btn-success flex-grow-1 rounded-3 fw-bold"
+                                                    (click)="approveChangeRequest(request._id)"
+                                                    [disabled]="processingRequest()"
+                                                >
+                                                    <i class="bi bi-check-lg me-1"></i>
+                                                    Approve
+                                                </button>
+                                                <button 
+                                                    class="btn btn-danger flex-grow-1 rounded-3 fw-bold"
+                                                    (click)="rejectChangeRequest(request._id)"
+                                                    [disabled]="processingRequest()"
+                                                >
+                                                    <i class="bi bi-x-lg me-1"></i>
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             }
                         </div>

@@ -4,22 +4,27 @@
     "description": "MEAN Stack Food Ordering Application for Campus Canteen",
     "private": true,
     "workspaces": [
-        "client",
+        "client-user",
+        "client-admin",
         "server"
     ],
     "scripts": {
-        "install:all": "npm install && cd client && npm install && cd ../server && npm install",
-        "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+        "install:all": "npm install && cd client-user && npm install && cd ../client-admin && npm install && cd ../server && npm install",
+        "dev": "concurrently \"npm run dev:server\" \"npm run dev:user\" \"npm run dev:admin\"",
         "dev:server": "cd server && npm run dev",
-        "dev:client": "cd client && npm start",
+        "dev:user": "cd client-user && npm start",
+        "dev:admin": "cd client-admin && npm start",
         "build:server": "cd server && npm run build",
-        "build:client": "cd client && npm run build",
-        "build": "npm run build:server && npm run build:client",
+        "build:user": "cd client-user && npm run build",
+        "build:admin": "cd client-admin && npm run build",
+        "build": "npm run build:server && npm run build:user && npm run build:admin",
         "start:server": "cd server && npm start",
-        "start:client": "cd client && npm run serve",
+        "start:user": "cd client-user && npm run serve",
+        "start:admin": "cd client-admin && npm run serve",
         "test:server": "cd server && npm test",
-        "test:client": "cd client && npm test",
-        "test": "npm run test:server && npm run test:client"
+        "test:user": "cd client-user && npm test",
+        "test:admin": "cd client-admin && npm test",
+        "test": "npm run test:server && npm run test:user && npm run test:admin"
     },
     "keywords": [
         "MEAN",

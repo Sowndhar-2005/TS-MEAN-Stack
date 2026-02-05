@@ -1,36 +1,53 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { UserService } from '../services/user.service';
+import { map, catchError, of } from 'rxjs';
 
 export const adminGuard: CanActivateFn = () => {
     const userService = inject(UserService);
     const router = inject(Router);
 
-    const user = userService.currentUser();
     const token = localStorage.getItem('token');
+    const user = userService.currentUser();
 
-    // Check if user is authenticated and is an admin
-    if (token && user?.isAdmin) {
-        return true;
-    }
-
-    // If token exists but user not loaded yet, or not admin
-    if (token && !user) {
-        // User might still be loading, allow access and let the component handle it
-        // Or redirect to admin-login if we want to be strict
+    // No token, redirect to login
+    if (!token) {
         router.navigate(['/admin-login']);
         return false;
     }
 
-    // Redirect non-admin users
-    if (token && user && !user.isAdmin) {
-        // Clear session if they are not admin
-        localStorage.removeItem('token');
-        router.navigate(['/admin-login']);
-        return false;
+    // User already loaded
+    if (user) {
+        if (user.isAdmin) {
+            return true;
+        } else {
+            // Non-admin user, clear and redirect
+            localStorage.removeItem('token');
+            localStorage.removeItem('isAdmin');
+            router.navigate(['/admin-login']);
+            return false;
+        }
     }
 
-    // No token, redirect to admin login
-    router.navigate(['/admin-login']);
-    return false;
+    // Token exists but user not loaded yet - fetch profile
+    return userService.getProfile().pipe(
+        map((fetchedUser: any) => {
+            userService.currentUser.set(fetchedUser);
+            if (fetchedUser.isAdmin) {
+                return true;
+            } else {
+                localStorage.removeItem('token');
+                localStorage.removeItem('isAdmin');
+                router.navigate(['/admin-login']);
+                return false;
+            }
+        }),
+        catchError(() => {
+            // If profile fetch fails, logout and redirect
+            localStorage.removeItem('token');
+            localStorage.removeItem('isAdmin');
+            router.navigate(['/admin-login']);
+            return of(false);
+        })
+    );
 };
